@@ -7,4 +7,5 @@ r = requests.post('http://127.0.0.1:8000/app/gvamonitorupload/', data={"file": "
 
 # Get data
 r = requests.get('http://127.0.0.1:8000/app/stress_data/')
+r = requests.get('http://127.0.0.1:8000/app/stress_data/?start_date=2019-10-26&end_date=2019-10-27')
 
