@@ -2,7 +2,6 @@
 from django.db import models
 
 
-# Garmin vívoactive 3 Models
 class GVAMonitorFile(models.Model):
     """
     Heart rate monitor files (MONITOR)
@@ -10,37 +9,24 @@ class GVAMonitorFile(models.Model):
     filename = models.CharField(max_length=15)
 
 
-class GVAMonitorData(models.Model):
+class GVAMonitorStressData(models.Model):
     """
-    Data fron heart rate monitor files (MONITOR)
+    Stress data fron heart rate monitor files (MONITOR)
+
+    Field 0="Data"
+    Field 2="stress_level"
+    Field 3="stress_level_time"
+    Field 4=timestamp
+    Field 5=units "s"
+    Field 6="stress_level_value"
+    Field 7=value (0-100)
+    Field 8=units
+    Field 9="unknown"
+    Field 10=-100 to 150
+
+    Date is Tuesday, October 26, 1999. 20 years behind.
     """
     gvamonitordata_id = models.AutoField(primary_key=True)
     file = models.ForeignKey(GVAMonitorFile, on_delete=models.CASCADE)
-    type = models.CharField(max_length=15)
-    local_number = models.IntegerField()
-    message = models.CharField(max_length=30)
-    field_1 = models.CharField(max_length=30)
-    value_1 = models.IntegerField()
-    units_1 = models.CharField(max_length=2)
-    field_2 = models.CharField(max_length=30)
-    value_2 = models.IntegerField()
-    units_2 = models.CharField(max_length=2)
-    field_3 = models.CharField(max_length=30)
-    value_3 = models.IntegerField()
-    units_3 = models.CharField(max_length=2)
-    field_4 = models.CharField(max_length=30)  # here and below seemingly unused
-    value_4 = models.IntegerField()
-    units_4 = models.CharField(max_length=2)
-    field_5 = models.CharField(max_length=30)
-    value_5 = models.IntegerField()
-    units_5 = models.CharField(max_length=2)
-    field_6 = models.CharField(max_length=30)
-    value_6 = models.IntegerField()
-    units_6 = models.CharField(max_length=2)
-    field_7 = models.CharField(max_length=30)
-    value_7 = models.IntegerField()
-    units_7 = models.CharField(max_length=2)
-    field_8 = models.CharField(max_length=30)
-    value_8 = models.IntegerField()
-    units_8 = models.CharField(max_length=2)
-
+    stress_level_time = models.DateTimeField()  # Field 4
+    stress_level_value = models.IntegerField()  # Field 7
