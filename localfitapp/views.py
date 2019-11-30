@@ -1,34 +1,38 @@
-# STDLIB
-import csv
-
 # 3rd Party
-from rest_framework import viewsets, status, mixins
-from rest_framework.exceptions import ParseError
-from rest_framework.parsers import FileUploadParser
+from rest_framework import viewsets, mixins
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.generics import CreateAPIView
-from django.http import HttpResponse, JsonResponse
-from rest_framework.decorators import api_view
 
 # Internal
 from .serializers import GVAMonitorFileUploadSerializer, StressDataSerializer
 from .models import GVAMonitorStressData
 
 
-@api_view(['GET'])
-def stress_list(request):
-    # TODO time bounds
-    stress_data = GVAMonitorStressData.objects.all().order_by('-stress_level_time')
-    serializer = StressDataSerializer(data=stress_data, many=True)
-    return JsonResponse(serializer.data, safe=False)
+class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
+    queryset = GVAMonitorStressData.objects.all()
+    serializer_class = StressDataSerializer
+
+    def get_queryset(self):
+        queryset = GVAMonitorStressData.objects.all()
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        if start_date:
+            queryset = queryset.filter(stress_level_time__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(stress_level_time__lt=end_date)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        page = self.paginate_queryset(self.get_queryset())
+        if page:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(serializer.data)
 
 
 class GVAMonitorFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
-    """
-    TODO filter and only show a day of data at a time
-    objects.filter(stress_level_time__gt="2019-10-26 00:00:00", stress_level_time__lt="2019-10-27 00:00:00")
-    """
+
     queryset = GVAMonitorStressData.objects.all().order_by('gvamonitordata_id')
     serializer_class = GVAMonitorFileUploadSerializer
 

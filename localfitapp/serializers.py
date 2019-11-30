@@ -1,14 +1,18 @@
+# STDLIB
 import csv
-import pytz
+
+# 3rd Party
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from .models import GVAMonitorFile, GVAMonitorStressData
-
 from django.db import transaction
+import pytz
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.utils.serializer_helpers import ReturnList
+
+# Internal
+from .models import GVAMonitorFile, GVAMonitorStressData
 
 
 class StressDataListSerializer(serializers.ListSerializer):
@@ -26,13 +30,13 @@ class StressDataListSerializer(serializers.ListSerializer):
         return [
             {
                 "t": value.stress_level_time.strftime("%Y-%m-%d %H:%M:%S"),
-                "y": value.stress_level_value
+                "y": value.stress_level_value if value.stress_level_value != -1 else 0
             } for value in stress_data
         ]
 
     @property
     def data(self):
-        stress_data = self._format_for_chart_js(self.initial_data)
+        stress_data = self._format_for_chart_js(self.instance)
         return ReturnList(stress_data, serializer=self)
 
 

@@ -59,7 +59,7 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 2000  # More than the number of minutes in a day (1440)
 }
 
 ROOT_URLCONF = 'localfitserver.urls'
