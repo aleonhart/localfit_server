@@ -9,6 +9,10 @@ for f in `ls ~/Documents/garmindata/MONITOR/*.FIT`;do FILENAME=$(ls $f|cut -d"/"
 import requests
 r = requests.post('http://127.0.0.1:8000/app/gvamonitorupload/', data={"file": "testdata/monitor_testfile.csv"})
 ```
+# Bulk upload files
+```bash
+for f in `ls ~/Documents/garmindata/MONITOR/*.FIT`;do FILENAME=$(ls $f|cut -d"/" -f7|cut -d"." -f1); echo "import requests; r = requests.post('http://127.0.0.1:8000/app/gvamonitorupload/', data={'file': '/Users/YOU/Documents/garmindata/CSV/MONITOR_STRESS/$FILENAME.csv'}); print(r)"|python;done
+```
 
 # Get data
 ```python
