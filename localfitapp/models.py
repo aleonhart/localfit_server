@@ -2,16 +2,16 @@
 from django.db import models
 
 
-class GVAMonitorFile(models.Model):
+class MonitorStressFile(models.Model):
     """
-    Heart rate monitor files (MONITOR)
+    Heart rate monitor files (MONITOR) - Stress Data
     """
-    filename = models.CharField(max_length=15)
+    filename = models.CharField(max_length=15, unique=True)
 
 
-class GVAMonitorStressData(models.Model):
+class MonitorStressData(models.Model):
     """
-    Stress data fron heart rate monitor files (MONITOR)
+    Stress data from heart rate monitor files (MONITOR)
 
     Field 0="Data"
     Field 2="stress_level"
@@ -27,6 +27,6 @@ class GVAMonitorStressData(models.Model):
     Date is Tuesday, October 26, 1999. 20 years behind.
     """
     gvamonitordata_id = models.AutoField(primary_key=True)
-    file = models.ForeignKey(GVAMonitorFile, on_delete=models.CASCADE)
+    file = models.ForeignKey(MonitorStressFile, on_delete=models.CASCADE)
     stress_level_time = models.DateTimeField()  # Field 4
     stress_level_value = models.IntegerField()  # Field 7

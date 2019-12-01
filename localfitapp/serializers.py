@@ -12,7 +12,7 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.utils.serializer_helpers import ReturnList
 
 # Internal
-from .models import GVAMonitorFile, GVAMonitorStressData
+from .models import MonitorStressFile, MonitorStressData
 
 
 class StressDataListSerializer(serializers.ListSerializer):
@@ -118,7 +118,7 @@ Field 14=units
 """
 
 
-class GVAMonitorFileUploadSerializer(serializers.Serializer):
+class MonitorStressFileUploadSerializer(serializers.Serializer):
     parser_class = (FileUploadParser,)
 
     def _fix_watch_date(self, timestamp_str):
@@ -141,14 +141,15 @@ class GVAMonitorFileUploadSerializer(serializers.Serializer):
         newfiledata = None
         ifile = open(f, "r", encoding="utf8")
         with transaction.atomic():
-            newfile = GVAMonitorFile(filename=ifile.name)
+            newfile = MonitorStressFile(filename=ifile.name)
             newfile.save()
+
             reader = csv.reader(ifile)
             for row in reader:
                 # stress data
                 # TODO bulk upload
                 if row[0] == "Data" and row[2] == "stress_level":
-                    newfiledata = GVAMonitorStressData(
+                    newfiledata = MonitorStressData(
                         file=newfile,
                         stress_level_time=self._fix_watch_date(row[4]),
                         stress_level_value=row[7],
@@ -161,4 +162,4 @@ class GVAMonitorFileUploadSerializer(serializers.Serializer):
         pass
 
     class Meta:
-        model = GVAMonitorStressData
+        model = MonitorStressData

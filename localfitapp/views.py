@@ -1,18 +1,20 @@
 # 3rd Party
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+from django.db import IntegrityError
 
 # Internal
-from .serializers import GVAMonitorFileUploadSerializer, StressDataSerializer
-from .models import GVAMonitorStressData
+from .serializers import MonitorStressFileUploadSerializer, StressDataSerializer
+from .models import MonitorStressData
 
 
 class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
-    queryset = GVAMonitorStressData.objects.all()
+    queryset = MonitorStressData.objects.all()
     serializer_class = StressDataSerializer
 
     def get_queryset(self):
-        queryset = GVAMonitorStressData.objects.all()
+        queryset = MonitorStressData.objects.all()
         start_date = self.request.query_params.get('start_date')
         end_date = self.request.query_params.get('end_date')
         if start_date:
@@ -31,8 +33,17 @@ class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
         return Response(serializer.data)
 
 
-class GVAMonitorFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
+class MonitorFileStressUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
 
-    queryset = GVAMonitorStressData.objects.all().order_by('gvamonitordata_id')
-    serializer_class = GVAMonitorFileUploadSerializer
+    queryset = MonitorStressData.objects.all()
+    serializer_class = MonitorStressFileUploadSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            self.perform_create(serializer)
+        except IntegrityError:
+            return Response(serializer.data, status=HTTP_400_BAD_REQUEST)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=HTTP_201_CREATED, headers=headers)
