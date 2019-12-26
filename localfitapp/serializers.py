@@ -10,6 +10,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.utils.serializer_helpers import ReturnList
+from rest_framework.exceptions import ValidationError
+
 
 # Internal
 from .models import MonitorStressFile, MonitorStressData
@@ -123,28 +125,32 @@ class MonitorStressFileUploadSerializer(serializers.Serializer):
 
     def _fix_watch_date(self, timestamp_str):
         # my watch is 20 years behind. oops.
-        now = datetime.utcnow()
         timestamp = int(timestamp_str)
         watch_date_utc = datetime.fromtimestamp(timestamp, pytz.UTC)
 
-        year_difference = now.year - watch_date_utc.year
-        if year_difference:
-            watch_date_utc = watch_date_utc + relativedelta(years=year_difference)
+        if watch_date_utc.year < 2010:
+            watch_date_utc = watch_date_utc + relativedelta(years=20)
         return watch_date_utc
 
+    def validate(self, attrs):
+        if not self.initial_data.get('file'):
+            raise ValidationError({"file": "File must be provided"})
+
+        try:
+            open_file = open(self.initial_data['file'], "r", encoding="utf8")
+        except FileNotFoundError:
+            raise ValidationError({"file": "File not found"})
+        attrs['file'] = open_file
+        return attrs
+
     def create(self, validated_data):
-        if 'file' not in self.initial_data:
-            raise ParseError("Empty content")
 
-        f = self.initial_data['file']
-
-        newfiledata = None
-        ifile = open(f, "r", encoding="utf8")
         with transaction.atomic():
-            newfile = MonitorStressFile(filename=ifile.name)
+            filename = validated_data['file'].name.split("/")[-1].split(".")[0]
+            newfile = MonitorStressFile(filename=filename)
             newfile.save()
 
-            reader = csv.reader(ifile)
+            reader = csv.reader(validated_data['file'])
             for row in reader:
                 # stress data
                 # TODO bulk upload
