@@ -123,13 +123,20 @@ Field 14=units
 class MonitorStressFileUploadSerializer(serializers.Serializer):
     parser_class = (FileUploadParser,)
 
-    def _fix_watch_date(self, timestamp_str):
-        # my watch is 20 years behind. oops.
-        timestamp = int(timestamp_str)
-        watch_date_utc = datetime.fromtimestamp(timestamp, pytz.UTC)
+    def _fix_watch_date(self, ant_timestamp_str):
+        '''
+        ANT does not utilize the traditional UNIX epoch.
+        ANT epoch: 1989-12-31 00:00:00 UTC
+        UNIX epoch: 1970-01-01 00:00:00 UTC
+        UNIX - ANT = 631065600 seconds
+        '''
 
-        if watch_date_utc.year < 2010:
-            watch_date_utc = watch_date_utc + relativedelta(years=20)
+        epoch_difference = int(631065600)
+        unix_timestamp = int(ant_timestamp_str) + epoch_difference
+        watch_date_utc = datetime.fromtimestamp(unix_timestamp, pytz.UTC)
+
+        # if watch_date_utc.year < 2010:
+        #     watch_date_utc = watch_date_utc + relativedelta(years=20)
         return watch_date_utc
 
     def validate(self, attrs):

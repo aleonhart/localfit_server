@@ -1,3 +1,6 @@
+# stdlib
+from datetime import datetime
+
 # 3rd Party
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
@@ -15,12 +18,14 @@ class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     def get_queryset(self):
         queryset = MonitorStressData.objects.all()
-        start_date = self.request.query_params.get('start_date')
-        end_date = self.request.query_params.get('end_date')
-        if start_date:
-            queryset = queryset.filter(stress_level_time__gte=start_date)
-        if end_date:
-            queryset = queryset.filter(stress_level_time__lt=end_date)
+        start_date_str = self.request.query_params.get('start_date')
+        end_date_str = self.request.query_params.get('end_date')
+        if start_date_str:
+            start_date_dt = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S")
+            queryset = queryset.filter(stress_level_time__gte=start_date_dt.date())
+        if end_date_str:
+            end_date_dt = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M:%S")
+            queryset = queryset.filter(stress_level_time__lt=end_date_dt.date())
         return queryset
 
     def list(self, request, *args, **kwargs):

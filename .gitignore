@@ -1,6 +1,7 @@
 
 db.sqlite3
-localfitapp/migrations/
+*/migrations/
+
 *.pyc
 
 .DS_Store
