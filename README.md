@@ -24,21 +24,24 @@ python manage.py migrate
 ```bash
 python manage.py runserver
 ```
-# Uploading CSV Files
-## Upload a Single File
+# Stress Monitor Files
+## Upload a Single Stress Monitor File
 ```python
 import requests
-r = requests.post('http://127.0.0.1:8000/app/gvamonitorupload/', data={"file": "testdata/monitor_testfile.csv"})
+r = requests.post('http://127.0.0.1:8000/monitor/gvamonitorupload/', data={"file": "testdata/monitor_testfile.csv"})
 ```
-## Upload files in bulk
+## Upload Stress Monitor Files in Bulk
 ```bash
 for f in `ls ~/Documents/garmindata/CSV/MONITOR_STRESS/*.csv`;do echo "import requests; r = requests.post('http://127.0.0.1:8000/app/gvamonitorupload/', data={'file': '$f'}); print(r)"|python;done
 ```
 
-# Viewing Data
+# Viewing Stress Monitor Data
 ```python
 import requests
-r = requests.get('http://127.0.0.1:8000/app/stress_data/')
-r = requests.get('http://127.0.0.1:8000/app/stress_data/?start_date=2018-02-01&end_date=2018-03-01')
+r = requests.get('http://127.0.0.1:8000/monitor/stress_data/')
+r = requests.get('http://127.0.0.1:8000/monitor/stress_data/?start_date=2018-02-01&end_date=2018-03-01')
 ```
 
+# Activity Files
+
+java -jar ~/Documents/code/fit_to_csv/java/FitCSVTool.jar -b ~/Documents/garmindata/ACTIVITY/82DI0102.FIT ~/Documents/garmindata/CSV/ACTIVITY/82DI0102
