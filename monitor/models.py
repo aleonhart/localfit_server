@@ -23,10 +23,8 @@ class MonitorStressData(models.Model):
     Field 8=units
     Field 9="unknown"
     Field 10=-100 to 150
-
-    Date is Tuesday, October 26, 1999. 20 years behind.
     """
-    gvamonitordata_id = models.AutoField(primary_key=True)
+    monitor_stress_data_id = models.AutoField(primary_key=True)
     file = models.ForeignKey(MonitorStressFile, on_delete=models.CASCADE)
     stress_level_time = models.DateTimeField()  # Field 4
     stress_level_value = models.IntegerField()  # Field 7
