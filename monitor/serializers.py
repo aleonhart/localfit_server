@@ -15,6 +15,7 @@ from rest_framework.exceptions import ValidationError
 
 # Internal
 from .models import MonitorStressFile, MonitorStressData
+from localfitserver.utils import convert_ant_timestamp_to_unix_timestamp
 
 
 class StressDataListSerializer(serializers.ListSerializer):
@@ -123,22 +124,6 @@ Field 14=units
 class MonitorStressFileUploadSerializer(serializers.Serializer):
     parser_class = (FileUploadParser,)
 
-    def _fix_watch_date(self, ant_timestamp_str):
-        '''
-        ANT does not utilize the traditional UNIX epoch.
-        ANT epoch: 1989-12-31 00:00:00 UTC
-        UNIX epoch: 1970-01-01 00:00:00 UTC
-        UNIX - ANT = 631065600 seconds
-        '''
-
-        epoch_difference = int(631065600)
-        unix_timestamp = int(ant_timestamp_str) + epoch_difference
-        watch_date_utc = datetime.fromtimestamp(unix_timestamp, pytz.UTC)
-
-        # if watch_date_utc.year < 2010:
-        #     watch_date_utc = watch_date_utc + relativedelta(years=20)
-        return watch_date_utc
-
     def validate(self, attrs):
         if not self.initial_data.get('file'):
             raise ValidationError({"file": "File must be provided"})
@@ -164,7 +149,7 @@ class MonitorStressFileUploadSerializer(serializers.Serializer):
                 if row[0] == "Data" and row[2] == "stress_level":
                     newfiledata = MonitorStressData(
                         file=newfile,
-                        stress_level_time=self._fix_watch_date(row[4]),
+                        stress_level_time=convert_ant_timestamp_to_unix_timestamp(row[4]),
                         stress_level_value=row[7],
                     )
                     newfiledata.save()
