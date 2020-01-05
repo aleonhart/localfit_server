@@ -6,6 +6,7 @@ class ActivityWalkFile(models.Model):
     Activity Walk files (ACTIVITY)
     """
     filename = models.CharField(max_length=15, unique=True)
+    display_name = models.CharField(max_length=15, unique=True)
 
 
 class ActivityWalkData(models.Model):

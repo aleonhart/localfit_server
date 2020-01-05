@@ -24,14 +24,14 @@ class ActivityFileUploadSerializer(serializers.Serializer):
         except FileNotFoundError:
             raise ValidationError({"file": "File not found"})
         attrs['file'] = open_file
+        attrs['display_name'] = self.initial_data['display_name']
         return attrs
 
     def create(self, validated_data):
-
         newfiledata = None
         with transaction.atomic():
             filename = validated_data['file'].name.split("/")[-1].split(".")[0]
-            newfile = ActivityWalkFile(filename=filename)
+            newfile = ActivityWalkFile(filename=filename, display_name=validated_data['display_name'])
             newfile.save()
 
             reader = csv.reader(validated_data['file'])
@@ -73,9 +73,6 @@ class ActivityFileUploadSerializer(serializers.Serializer):
                     newfiledata.save()
 
         return newfiledata
-
-    def update(self, instance, validated_data):
-        pass
 
     class Meta:
         model = ActivityWalkData
