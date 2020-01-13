@@ -39,7 +39,7 @@ class ActivityWalkData(models.Model):
     "enhanced_speed" float (m/s)
     """
     activity_walk_data_id = models.AutoField(primary_key=True)
-    file = models.ForeignKey(ActivityWalkFile, on_delete=models.CASCADE)
+    file = models.ForeignKey(ActivityWalkFile, related_name='activitywalkdata', on_delete=models.CASCADE)
     timestamp_utc = models.DateTimeField()                                               # seconds
     position_lat_sem = models.IntegerField(null=True)                                    # semicircles
     position_long_sem = models.IntegerField(null=True)                                   # semicircles

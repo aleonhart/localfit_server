@@ -12,6 +12,20 @@ from .models import ActivityWalkFile, ActivityWalkData
 from localfitserver.utils import convert_ant_timestamp_to_unix_timestamp, convert_semicircles_to_degrees
 
 
+class ActivityWalkDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActivityWalkData
+        fields = ['position_lat_deg']
+
+
+class ActivityWalkFileSerializer(serializers.ModelSerializer):
+    activitywalkdata = ActivityWalkDataSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ActivityWalkFile
+        fields = ['filename', 'display_name', 'activitywalkdata']
+
+
 class ActivityFileUploadSerializer(serializers.Serializer):
     parser_class = (FileUploadParser,)
 

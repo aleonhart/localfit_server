@@ -3,10 +3,20 @@ from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from django.db import IntegrityError
+from django.shortcuts import get_object_or_404
 
 # Internal
-from .serializers import ActivityFileUploadSerializer
-from .models import ActivityWalkData
+from .serializers import ActivityFileUploadSerializer, ActivityWalkFileSerializer
+from .models import ActivityWalkData, ActivityWalkFile
+
+
+class ActivityViewSet(viewsets.GenericViewSet,
+                      mixins.RetrieveModelMixin,
+                      mixins.ListModelMixin):
+
+    queryset = ActivityWalkFile.objects.all()
+    lookup_field = 'filename'
+    serializer_class = ActivityWalkFileSerializer
 
 
 class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
