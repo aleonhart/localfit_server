@@ -33,7 +33,7 @@ r = requests.get('http://127.0.0.1:8000/monitor/stress_data/?start_date=2018-02-
 ## Upload a Single File
 ```python
 import requests
-r = requests.post('http://127.0.0.1:8000/activity/upload/', data={"file": "~/Documents/garmindata/CSV/ACTIVITY/9CUB1048.csv"})      
+r = requests.post('http://127.0.0.1:8000/activity/upload/', data={"file": "~/Documents/garmindata/CSV/ACTIVITY/9CUB1048.csv", "display_name": "forrest walk"})      
 ```
 
 # File Type Conversion
