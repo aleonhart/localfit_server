@@ -15,11 +15,8 @@ class ActivityViewSet(viewsets.GenericViewSet,
                       mixins.ListModelMixin):
 
     queryset = ActivityFile.objects.all()
+    serializer_class = ActivityWalkFileDetailSerializer
     lookup_field = 'filename'
-
-    def retrieve(self, request, *args, **kwargs):
-        serializer = ActivityWalkFileDetailSerializer(self.queryset, many=True)
-        return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

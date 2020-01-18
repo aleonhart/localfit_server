@@ -8,7 +8,7 @@ from .views import ActivityFileUpload, ActivityViewSet
 
 router = routers.DefaultRouter()
 router.register(r'upload', ActivityFileUpload)
-router.register(r'data', ActivityViewSet)
+router.register(r'info', ActivityViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
