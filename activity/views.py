@@ -6,17 +6,31 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from fitparse import FitFile
 
 # Internal
-from .serializers import ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer, ActivityWalkFileSerializer
-from .models import ActivityWalkData, ActivityWalkFile
+from .serializers import ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer, ActivityWalkFileDetailSerializer, ActivityWalkFileListSerializer
+from .models import WalkData, ActivityFile
 
 
 class ActivityViewSet(viewsets.GenericViewSet,
                       mixins.RetrieveModelMixin,
                       mixins.ListModelMixin):
 
-    queryset = ActivityWalkFile.objects.all()
+    queryset = ActivityFile.objects.all()
     lookup_field = 'filename'
-    serializer_class = ActivityWalkFileSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        serializer = ActivityWalkFileDetailSerializer(self.queryset, many=True)
+        return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ActivityWalkFileListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ActivityWalkFileListSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
@@ -27,7 +41,7 @@ class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
     appropriate serializer for that activity.
     """
 
-    queryset = ActivityWalkData.objects.all()
+    queryset = WalkData.objects.all()
 
     SPORT_TO_SERIALIZER = {
         (11, 0): ActivityWalkFileUploadSerializer,   # walk
