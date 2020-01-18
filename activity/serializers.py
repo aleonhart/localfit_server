@@ -31,11 +31,6 @@ class ActivityWalkDataSerializer(serializers.ModelSerializer):
 
 
 class ActivityWalkSessionSerializer(serializers.ModelSerializer):
-
-    """
-    ret['total_distance'] = format_distance_for_display(ret['total_distance'])
-
-    """
     total_distance = serializers.DecimalField(max_digits=8, decimal_places=2)
 
     def to_representation(self, instance):
