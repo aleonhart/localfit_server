@@ -60,7 +60,8 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 2000  # More than the number of minutes in a day (1440)
+    'PAGE_SIZE': 2000,  # More than the number of minutes in a day (1440)
+    'COERCE_DECIMAL_TO_STRING': False,  # GoogleMaps API likes decimals
 }
 
 ROOT_URLCONF = 'localfitserver.urls'

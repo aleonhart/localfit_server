@@ -1,21 +1,20 @@
 # 3rd Party
-from datetime import datetime
-import pytz
+from datetime import timedelta, datetime
+from decimal import Decimal
+from geopy.geocoders import Nominatim
 
 
-def convert_ant_timestamp_to_unix_timestamp(ant_timestamp_str):
-    '''
+def convert_ant_timestamp_to_unix_timestamp(ant_timestamp):
+    """
     ANT does not utilize the traditional UNIX epoch.
     ANT epoch: 1989-12-31 00:00:00 UTC
     UNIX epoch: 1970-01-01 00:00:00 UTC
     UNIX - ANT = 631065600 seconds
-    '''
+    """
 
-    epoch_difference = int(631065600)
-    unix_timestamp = int(ant_timestamp_str) + epoch_difference
-    watch_date_utc = datetime.fromtimestamp(unix_timestamp, pytz.UTC)
-
-    return watch_date_utc
+    DIFF_ANT_EPOCH_UNIX_EPOC_MILLIS = 631065600
+    unix_timestamp = ant_timestamp + timedelta(milliseconds=DIFF_ANT_EPOCH_UNIX_EPOC_MILLIS)
+    return unix_timestamp
 
 
 def convert_semicircles_to_degrees(semicircles):
@@ -49,4 +48,35 @@ def convert_semicircles_to_degrees(semicircles):
     Degrees = Semicircles*(180/2^31)
     41.364685 = 493499921*(180/2^31)
     """
-    return int(semicircles) * (180/(2**31))
+    return semicircles * (180/(2**31))
+
+
+def convert_lat_long_to_location_name(lat, long):
+    # TODO look this up on file upload and save it in the db
+    # geolocator = Nominatim(user_agent="localfit")
+    # address = geolocator.reverse(f"{round(lat, 6)}, {round(long, 6)}").raw['address']
+    # return f"{address['path']}, {address['county']} {address['state']}, {address['country']}"
+    return "Cathedral Trees Trail, Humboldt County California, United States of America"
+
+
+def format_timespan_for_display(seconds):
+    """
+    ANT FIT files record timespans in seconds.
+    Format this to HH:MM:SS for the front end to display
+    """
+    return str(timedelta(seconds=int(seconds)))
+
+
+def format_distance_for_display(meters):
+    """
+    Sorry! I'm from the USA. I'm defaulting
+    everything to miles.
+    """
+
+    return round(Decimal(meters * Decimal(0.000621371192)), 2)
+
+
+def format_date_for_display(date):
+    date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%f%z")
+    return date_obj.strftime("%A %H:%M%p, %B %w, %Y")
+
