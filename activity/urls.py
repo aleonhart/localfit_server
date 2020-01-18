@@ -3,13 +3,15 @@ from django.urls import include, path
 from rest_framework import routers
 
 # Internal
-from .views import ActivityFileUpload, ActivityViewSet
+from . import views
 
 
 router = routers.DefaultRouter()
-router.register(r'upload', ActivityFileUpload)
-router.register(r'info', ActivityViewSet)
+router.register(r'upload', views.ActivityFileUpload)
+router.register(r'info', views.ActivityViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    # path('info/', views.activity_list),
+    # path('info/<filename>/', views.activity_detail),
 ]

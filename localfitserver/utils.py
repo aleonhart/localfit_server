@@ -48,7 +48,7 @@ def convert_semicircles_to_degrees(semicircles):
     Degrees = Semicircles*(180/2^31)
     41.364685 = 493499921*(180/2^31)
     """
-    return semicircles * (180/(2**31))
+    return round(semicircles * (180/(2**31)), 6)
 
 
 def convert_lat_long_to_location_name(lat, long):

@@ -1,33 +1,51 @@
 # 3rd Party
+from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from fitparse import FitFile
 
 # Internal
-from .serializers import ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer, ActivityWalkFileDetailSerializer, ActivityWalkFileListSerializer
+from .serializers import (ActivityWalkFileDetailSerializer, ActivityWalkFileSerializer)
+from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
+                                 ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
+                                 ActivityRunFileUploadSerializer)
 from .models import WalkData, ActivityFile
 
 
-class ActivityViewSet(viewsets.GenericViewSet,
-                      mixins.RetrieveModelMixin,
-                      mixins.ListModelMixin):
-
+class ActivityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
     queryset = ActivityFile.objects.all()
     serializer_class = ActivityWalkFileDetailSerializer
     lookup_field = 'filename'
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = ActivityWalkFileListSerializer(page, many=True)
+            serializer = ActivityWalkFileSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-
-        serializer = ActivityWalkFileListSerializer(queryset, many=True)
+        serializer = ActivityWalkFileSerializer(queryset, many=True)
         return Response(serializer.data)
+
+
+
+# @api_view(['GET'])
+# def activity_list(request):
+#     activities = ActivityFile.objects.all()
+#     serializer = ActivityWalkFileSerializer(activities, many=True)
+#     return JsonResponse(serializer.data, safe=False)
+#
+#
+# @api_view(['GET'])
+# def activity_detail(request, filename):
+#     try:
+#         activity = ActivityFile.objects.get(filename=filename)
+#         serializer = ActivityWalkFileDetailSerializer(activity)
+#         return JsonResponse(serializer.data)
+#     except ActivityFile.DoesNotExist:
+#         return HttpResponse(status=404)
 
 
 class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
@@ -41,18 +59,28 @@ class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
     queryset = WalkData.objects.all()
 
     SPORT_TO_SERIALIZER = {
-        (11, 0): ActivityWalkFileUploadSerializer,   # walk
-        (10, 43): ActivityYogaFileUploadSerializer,  # yoga
+        (1, 0): ActivityRunFileUploadSerializer,              # Run
+        (11, 0): ActivityWalkFileUploadSerializer,            # walk
+        (10, 43): ActivityYogaFileUploadSerializer,           # yoga
+        (4, 16): ActivityStairClimbingFileUploadSerializer,   # Fitness Equipment: Stair Climbing
+        (10, 26): ActivityCardioFileUploadSerializer,  # Training: Cardio (Beat Saber)
     }
 
     def _get_serializer_by_sport(self, kwargs):
         file_path = kwargs.get('file')
         if not file_path:
-            raise ValidationError({"file": "File must be provided"})
+            raise ValidationError({"file": "Please provide a file path"})
 
-        fit_file = FitFile(file_path)
+        try:
+            fit_file = FitFile(file_path)
+        except FileNotFoundError:
+            raise ValidationError({"file": "File does not exist"})
         sport_data = [r for r in fit_file.get_messages('sport') if r.type == 'data'][0]
-        return self.SPORT_TO_SERIALIZER[(sport_data.get("sport").raw_value, sport_data.get("sub_sport").raw_value)]
+        try:
+            serializer = self.SPORT_TO_SERIALIZER[(sport_data.get("sport").raw_value, sport_data.get("sub_sport").raw_value)]
+        except KeyError:
+            raise ValidationError({"file": "Unsupported sport"})
+        return serializer
 
     def get_serializer(self, *args, **kwargs):
         serializer_class = self._get_serializer_by_sport(kwargs['data'])
