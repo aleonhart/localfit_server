@@ -16,6 +16,7 @@ class Session(models.Model):
     start_position_long_sem = models.IntegerField(null=True)
     start_position_lat_deg = models.DecimalField(null=True, max_digits=8, decimal_places=6)
     start_position_long_deg = models.DecimalField(null=True, max_digits=9, decimal_places=6)
+    start_location = models.CharField(null=True, max_length=200)
     total_elapsed_time = models.DecimalField(null=True, max_digits=7, decimal_places=3)
     total_timer_time = models.DecimalField(null=True, max_digits=7, decimal_places=3)
     total_distance = models.DecimalField(null=True, max_digits=8, decimal_places=2)

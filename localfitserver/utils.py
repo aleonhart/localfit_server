@@ -52,11 +52,15 @@ def convert_semicircles_to_degrees(semicircles):
 
 
 def convert_lat_long_to_location_name(lat, long):
-    # TODO look this up on file upload and save it in the db
-    # geolocator = Nominatim(user_agent="localfit")
-    # address = geolocator.reverse(f"{round(lat, 6)}, {round(long, 6)}").raw['address']
-    # return f"{address['path']}, {address['county']} {address['state']}, {address['country']}"
-    return "Cathedral Trees Trail, Humboldt County California, United States of America"
+    if lat and long:
+        geolocator = Nominatim(user_agent="localfit")
+        address = geolocator.reverse(f"{round(lat, 6)}, {round(long, 6)}").raw['address']
+        small_location = address.get('path') or address.get('footway') or address.get('road') or address.get('street')
+        med_location = address.get('hamlet') or address.get('village') or address.get('city')
+        full_address = f"{small_location}, {med_location}, {address.get('county')}, {address.get('state')}"
+    else:
+        full_address = 'Unknown'
+    return full_address
 
 
 def format_timespan_for_display(seconds):

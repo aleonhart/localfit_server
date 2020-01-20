@@ -16,7 +16,7 @@ from .models import WalkData, ActivityFile
 
 
 class ActivityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
-    queryset = ActivityFile.objects.all()
+    queryset = ActivityFile.objects.all().order_by('-session__start_time_utc')
     serializer_class = ActivityWalkFileDetailSerializer
     lookup_field = 'filename'
 
@@ -28,24 +28,6 @@ class ActivityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins
             return self.get_paginated_response(serializer.data)
         serializer = ActivityWalkFileSerializer(queryset, many=True)
         return Response(serializer.data)
-
-
-
-# @api_view(['GET'])
-# def activity_list(request):
-#     activities = ActivityFile.objects.all()
-#     serializer = ActivityWalkFileSerializer(activities, many=True)
-#     return JsonResponse(serializer.data, safe=False)
-#
-#
-# @api_view(['GET'])
-# def activity_detail(request, filename):
-#     try:
-#         activity = ActivityFile.objects.get(filename=filename)
-#         serializer = ActivityWalkFileDetailSerializer(activity)
-#         return JsonResponse(serializer.data)
-#     except ActivityFile.DoesNotExist:
-#         return HttpResponse(status=404)
 
 
 class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):

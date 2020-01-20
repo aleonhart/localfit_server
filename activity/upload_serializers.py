@@ -9,7 +9,8 @@ from fitparse import FitFile
 from .models import ActivityFile, Session, WalkData, YogaData
 from localfitserver.utils import (
     convert_ant_timestamp_to_unix_timestamp,
-    convert_semicircles_to_degrees)
+    convert_semicircles_to_degrees,
+    convert_lat_long_to_location_name)
 
 
 class BaseActivityFileUploadSerializer(serializers.Serializer):
@@ -94,12 +95,15 @@ class ActivityWalkFileUploadSerializer(BaseActivityFileUploadSerializer):
 
     def _get_activity_session_data(self, fit_file):
         session_data = [row for row in fit_file.get_messages('session')][0]
+        start_position_lat_deg = convert_semicircles_to_degrees(session_data.get('start_position_lat').value)
+        start_position_long_deg = convert_semicircles_to_degrees(session_data.get('start_position_long').value)
         return {
             'start_time_utc': convert_ant_timestamp_to_unix_timestamp(session_data.get('start_time').value),
             'start_position_lat_sem': session_data.get('start_position_lat').value,
             'start_position_long_sem': session_data.get('start_position_long').value,
-            'start_position_lat_deg': convert_semicircles_to_degrees(session_data.get('start_position_lat').value),
-            'start_position_long_deg': convert_semicircles_to_degrees(session_data.get('start_position_long').value),
+            'start_position_lat_deg': start_position_lat_deg,
+            'start_position_long_deg': start_position_long_deg,
+            'start_location': convert_lat_long_to_location_name(start_position_lat_deg, start_position_long_deg),
             'total_elapsed_time': session_data.get('total_elapsed_time').value,
             'total_timer_time': session_data.get('total_timer_time').value,
             'total_distance': session_data.get('total_distance').value,

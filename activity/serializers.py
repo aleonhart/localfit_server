@@ -1,11 +1,10 @@
 # 3rd Party
 from rest_framework import serializers
-from rest_framework.utils.serializer_helpers import ReturnDict
+from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
 # Internal
 from .models import ActivityFile, Session, WalkData
 from localfitserver.utils import (
-    convert_lat_long_to_location_name,
     format_timespan_for_display,
     format_distance_for_display,
     format_date_for_display)
@@ -32,7 +31,6 @@ class ActivityWalkSessionSerializer(serializers.ModelSerializer):
         data['start_time_utc'] = format_date_for_display(data['start_time_utc']) if data.get('start_time_utc') else None
         data['total_elapsed_time'] = format_timespan_for_display(data['total_elapsed_time']) if data.get('total_elapsed_time') else None
         data['total_distance'] = format_distance_for_display(data['total_distance']) if data.get('total_distance') else None
-        data['start_location'] = convert_lat_long_to_location_name(data['start_position_lat_deg'], data['start_position_long_deg']) if data.get('start_position_lat_deg') else None
         return data
 
     class Meta:
@@ -41,6 +39,7 @@ class ActivityWalkSessionSerializer(serializers.ModelSerializer):
             'start_time_utc',
             'start_position_lat_deg',
             'start_position_long_deg',
+            'start_location',
             'total_elapsed_time',
             'total_distance',
             'total_strides',
@@ -48,19 +47,29 @@ class ActivityWalkSessionSerializer(serializers.ModelSerializer):
         ]
 
 
-class ActivityWalkFileSerializer(serializers.ModelSerializer):
-    session = ActivityWalkSessionSerializer(many=True, read_only=True)
+class ActivityWalkFileListSerializer(serializers.ListSerializer):
 
     @property
     def data(self):
-        ret = super(ActivityWalkFileSerializer, self).data
-        session_data = ret.pop('session')[0]
-        ret.update(**session_data)
-        return ReturnDict(ret, serializer=self)
+        files = super(ActivityWalkFileListSerializer, self).data
+        for file in files:
+            session_data = file.pop('session')[0]
+            file.update(**session_data)
+        return ReturnList(files, serializer=self)
+
+
+class ActivityWalkFileSerializer(serializers.ModelSerializer):
+    #session = ActivityWalkSessionSerializer(many=True, read_only=True)
+    session = serializers.SerializerMethodField()
 
     class Meta:
         model = ActivityFile
+        list_serializer_class = ActivityWalkFileListSerializer
         fields = ['activity_type', 'filename', 'session']
+
+    def get_session(self, instance):
+        session = instance.session.all().order_by('-start_time_utc')
+        return ActivityWalkSessionSerializer(session, many=True).data
 
 
 class ActivityWalkFileDetailSerializer(serializers.ModelSerializer):
