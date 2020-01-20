@@ -48,7 +48,6 @@ class ActivityWalkSessionSerializer(serializers.ModelSerializer):
 
 
 class ActivityWalkFileListSerializer(serializers.ListSerializer):
-    session = ActivityWalkSessionSerializer(many=True, read_only=True)
 
     @property
     def data(self):
