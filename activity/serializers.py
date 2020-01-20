@@ -48,33 +48,21 @@ class ActivityWalkSessionSerializer(serializers.ModelSerializer):
 
 
 class ActivityWalkFileListSerializer(serializers.ListSerializer):
+    session = ActivityWalkSessionSerializer(many=True, read_only=True)
 
     @property
     def data(self):
         files = super(ActivityWalkFileListSerializer, self).data
         for file in files:
             session_data = file.pop('session')[0]
+            file.pop('activitywalkdata')  # TODO dont get this data from the DB in the first place
             file.update(**session_data)
         return ReturnList(files, serializer=self)
 
 
 class ActivityWalkFileSerializer(serializers.ModelSerializer):
-    #session = ActivityWalkSessionSerializer(many=True, read_only=True)
-    session = serializers.SerializerMethodField()
-
-    class Meta:
-        model = ActivityFile
-        list_serializer_class = ActivityWalkFileListSerializer
-        fields = ['activity_type', 'filename', 'session']
-
-    def get_session(self, instance):
-        session = instance.session.all().order_by('-start_time_utc')
-        return ActivityWalkSessionSerializer(session, many=True).data
-
-
-class ActivityWalkFileDetailSerializer(serializers.ModelSerializer):
-    activitywalkdata = ActivityWalkDataSerializer(many=True, read_only=True)
     session = ActivityWalkSessionSerializer(many=True, read_only=True)
+    activitywalkdata = ActivityWalkDataSerializer(many=True, read_only=True)
 
     @property
     def data(self):
@@ -89,7 +77,7 @@ class ActivityWalkFileDetailSerializer(serializers.ModelSerializer):
             }
         }
         """
-        ret = super(ActivityWalkFileDetailSerializer, self).data
+        ret = super(ActivityWalkFileSerializer, self).data
         # Filter out records that were recorded by the watch before GPS was enabled
         # TODO consider replacing the None with the starting coordinate if we need other data later
         ret['activitywalkdata'] = list(filter((None).__ne__, ret['activitywalkdata']))
@@ -100,5 +88,5 @@ class ActivityWalkFileDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ActivityFile
-        fields = ['activity_type', 'activitywalkdata', 'session']
-
+        list_serializer_class = ActivityWalkFileListSerializer
+        fields = ['activity_type', 'filename', 'session', 'activitywalkdata']

@@ -8,7 +8,7 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from fitparse import FitFile
 
 # Internal
-from .serializers import (ActivityWalkFileDetailSerializer, ActivityWalkFileSerializer)
+from .serializers import ActivityWalkFileSerializer
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer)
@@ -17,7 +17,7 @@ from .models import WalkData, ActivityFile
 
 class ActivityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
     queryset = ActivityFile.objects.all().order_by('-session__start_time_utc')
-    serializer_class = ActivityWalkFileDetailSerializer
+    serializer_class = ActivityWalkFileSerializer
     lookup_field = 'filename'
 
     def list(self, request, *args, **kwargs):
