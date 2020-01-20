@@ -25,11 +25,20 @@ class ActivityAltitudeListSerializer(serializers.ListSerializer):
 
     @property
     def data(self):
-        data = self._format_for_chart_js(self.instance)
-        return ReturnList(data, serializer=self)
+        altitude_data = self._format_for_chart_js(self.instance)
+        response = {
+            'start_time': altitude_data[0]['t'],
+            'end_time': altitude_data[-1]['t'],
+            'altitude_data': altitude_data
+        }
+        return ReturnDict(response, serializer=self)
 
 
 class ActivityAltitudeSerializer(serializers.ModelSerializer):
+
+    def to_representation(self, instance):
+        super(ActivityAltitudeSerializer, self).to_representation(instance)
+        return instance
 
     class Meta:
         model = WalkData
