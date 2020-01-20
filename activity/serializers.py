@@ -10,6 +10,33 @@ from localfitserver.utils import (
     format_date_for_display)
 
 
+class ActivityAltitudeListSerializer(serializers.ListSerializer):
+    """
+    TODO
+    refactor this chartjs formatting into its own utility
+    """
+    def _format_for_chart_js(self, data):
+        return [
+            {
+                "t": value.timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+                "y": value.altitude if value.altitude != -1 else 0
+            } for value in data
+        ]
+
+    @property
+    def data(self):
+        data = self._format_for_chart_js(self.instance)
+        return ReturnList(data, serializer=self)
+
+
+class ActivityAltitudeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = WalkData
+        list_serializer_class = ActivityAltitudeListSerializer
+        fields = ['timestamp_utc', 'altitude', 'enhanced_altitude']
+
+
 class ActivityWalkDataSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):

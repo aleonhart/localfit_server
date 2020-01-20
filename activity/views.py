@@ -1,16 +1,28 @@
 # 3rd Party
+from django.http import HttpResponse
 from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from fitparse import FitFile
 
 # Internal
-from .serializers import ActivityWalkFileSerializer
+from .serializers import ActivityWalkFileSerializer, ActivityAltitudeSerializer
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer)
 from .models import WalkData, ActivityFile
+
+
+@api_view(['GET'])
+def activity_altitude(request, filename):
+    try:
+        data = WalkData.objects.filter(file__filename=filename).order_by('timestamp_utc')
+        serializer = ActivityAltitudeSerializer(data, many=True)
+        return Response(serializer.data)
+    except ActivityFile.DoesNotExist:
+        return HttpResponse(status=404)
 
 
 class ActivityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):

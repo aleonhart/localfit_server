@@ -13,5 +13,5 @@ router.register(r'info', views.ActivityViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     # path('info/', views.activity_list),
-    # path('info/<filename>/', views.activity_detail),
+    path('altitude/<filename>/', views.activity_altitude),
 ]

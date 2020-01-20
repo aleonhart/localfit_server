@@ -29,18 +29,18 @@ class StressDataListSerializer(serializers.ListSerializer):
     ]
     """
 
-    def _format_for_chart_js(self, stress_data):
+    def _format_for_chart_js(self, data):
         return [
             {
                 "t": value.stress_level_time.strftime("%Y-%m-%d %H:%M:%S"),
                 "y": value.stress_level_value if value.stress_level_value != -1 else 0
-            } for value in stress_data
+            } for value in data
         ]
 
     @property
     def data(self):
-        stress_data = self._format_for_chart_js(self.instance)
-        return ReturnList(stress_data, serializer=self)
+        data = self._format_for_chart_js(self.instance)
+        return ReturnList(data, serializer=self)
 
 
 class StressDataSerializer(serializers.Serializer):
