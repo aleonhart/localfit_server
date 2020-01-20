@@ -59,7 +59,7 @@ class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
     queryset = WalkData.objects.all()
 
     SPORT_TO_SERIALIZER = {
-        (1, 0): ActivityRunFileUploadSerializer,              # Run
+        (1, 0): ActivityRunFileUploadSerializer,              # Run: generic
         (11, 0): ActivityWalkFileUploadSerializer,            # walk
         (10, 43): ActivityYogaFileUploadSerializer,           # yoga
         (4, 16): ActivityStairClimbingFileUploadSerializer,   # Fitness Equipment: Stair Climbing

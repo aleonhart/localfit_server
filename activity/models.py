@@ -48,12 +48,12 @@ class WalkData(models.Model):
     position_long_deg = models.DecimalField(null=True, max_digits=9, decimal_places=6)   #     XXX.XXXXXX degrees
     distance = models.DecimalField(max_digits=8, decimal_places=2)                       # XXX,XXX.XX  meters, 100mi is 160,934m
     altitude = models.DecimalField(max_digits=5, decimal_places=1)                       #   X,XXX.X   meters, Mt. Everest is 8,850m high
-    speed = models.IntegerField()                                                        #      XX.XXX meters/second, Usain Bolt's top speed is 12.27m/s
+    speed = models.IntegerField(null=True)                                                        #      XX.XXX meters/second, Usain Bolt's top speed is 12.27m/s
     heart_rate = models.IntegerField()                                                   # BPM
     cadence = models.IntegerField()                                                      # RPM
     fractional_cadence = models.DecimalField(max_digits=5, decimal_places=1)             # RPM
     enhanced_altitude = models.DecimalField(max_digits=5, decimal_places=1)              #   X,XXX.X   meters
-    enhanced_speed = models.DecimalField(max_digits=5, decimal_places=3)                 #      XX.XXX meters/second
+    enhanced_speed = models.DecimalField(null=True, max_digits=5, decimal_places=3)                 #      XX.XXX meters/second
 
 
 class YogaData(models.Model):
