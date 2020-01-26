@@ -82,5 +82,5 @@ def format_distance_for_display(meters):
 
 def format_date_for_display(date):
     date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%f%z")
-    return date_obj.strftime("%A %H:%M%p, %B %w, %Y")
+    return date_obj.strftime("%A %H:%M%p, %B %d, %Y")
 

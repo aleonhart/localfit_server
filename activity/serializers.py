@@ -82,6 +82,7 @@ class ActivityWalkSessionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super(ActivityWalkSessionSerializer, self).to_representation(instance)
+        data['start_time_utc_dt'] = data['start_time_utc']
         data['start_time_utc'] = format_date_for_display(data['start_time_utc']) if data.get('start_time_utc') else None
         data['total_elapsed_time'] = format_timespan_for_display(data['total_elapsed_time']) if data.get('total_elapsed_time') else None
         data['total_distance'] = format_distance_for_display(data['total_distance']) if data.get('total_distance') else None
@@ -110,7 +111,9 @@ class ActivityWalkFileListSerializer(serializers.ListSerializer):
             session_data = file.pop('session')[0]
             file.pop('activitydata')  # TODO dont get this data from the DB in the first place
             file.update(**session_data)
-        return ReturnList(files, serializer=self)
+        # TODO any way to avoid this or get it into the query?
+        sorted_files = sorted(files, key=lambda f: f['start_time_utc_dt'], reverse=True)
+        return ReturnList(sorted_files, serializer=self)
 
 
 class ActivityWalkFileSerializer(serializers.ModelSerializer):
