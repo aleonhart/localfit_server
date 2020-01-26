@@ -2,11 +2,9 @@ from django.db import models
 
 
 class ActivityFile(models.Model):
-    """
-    Activity Walk files (ACTIVITY)
-    """
     filename = models.CharField(max_length=15, unique=True)
     activity_type = models.CharField(max_length=20)
+    activity_category = models.CharField(max_length=20)
 
 
 class Session(models.Model):
@@ -34,37 +32,19 @@ class Session(models.Model):
     max_heart_rate = models.IntegerField(null=True)
 
 
-class WalkData(models.Model):
-    """
-    Sport: 11 (Walk)
-    Subsport: 0
-    """
-
+class ActivityData(models.Model):
     activity_walk_data_id = models.AutoField(primary_key=True)
-    file = models.ForeignKey(ActivityFile, related_name='activitywalkdata', on_delete=models.CASCADE)
+    file = models.ForeignKey(ActivityFile, related_name='activitydata', on_delete=models.CASCADE)
     timestamp_utc = models.DateTimeField()                                               # seconds
+    heart_rate = models.IntegerField()                                                   # BPM
     position_lat_sem = models.IntegerField(null=True)                                    # semicircles
     position_long_sem = models.IntegerField(null=True)                                   # semicircles
     position_lat_deg = models.DecimalField(null=True, max_digits=8, decimal_places=6)    #      XX.XXXXXX degrees
     position_long_deg = models.DecimalField(null=True, max_digits=9, decimal_places=6)   #     XXX.XXXXXX degrees
-    distance = models.DecimalField(max_digits=8, decimal_places=2)                       # XXX,XXX.XX  meters, 100mi is 160,934m
-    altitude = models.DecimalField(max_digits=5, decimal_places=1)                       #   X,XXX.X   meters, Mt. Everest is 8,850m high
-    speed = models.IntegerField(null=True)                                                        #      XX.XXX meters/second, Usain Bolt's top speed is 12.27m/s
-    heart_rate = models.IntegerField()                                                   # BPM
-    cadence = models.IntegerField()                                                      # RPM
-    fractional_cadence = models.DecimalField(max_digits=5, decimal_places=1)             # RPM
-    enhanced_altitude = models.DecimalField(max_digits=5, decimal_places=1)              #   X,XXX.X   meters
-    enhanced_speed = models.DecimalField(null=True, max_digits=5, decimal_places=3)                 #      XX.XXX meters/second
-
-
-class YogaData(models.Model):
-    """
-    YOGA
-    Sport:    10 (Training)
-    Subsport: 43 (Yoga)
-    """
-
-    activity_walk_data_id = models.AutoField(primary_key=True)
-    file = models.ForeignKey(ActivityFile, related_name='activityyogadata', on_delete=models.CASCADE)
-    timestamp_utc = models.DateTimeField()  # seconds                                                       #      XX.XXX meters/second, Usain Bolt's top speed is 12.27m/s
-    heart_rate = models.IntegerField()      # BPM
+    distance = models.DecimalField(null=True, max_digits=8, decimal_places=2)            # XXX,XXX.XX  meters, 100mi is 160,934m
+    altitude = models.DecimalField(null=True, max_digits=5, decimal_places=1)            #   X,XXX.X   meters, Mt. Everest is 8,850m high
+    speed = models.IntegerField(null=True)                                               #      XX.XXX meters/second, Usain Bolt's top speed is 12.27m/s
+    cadence = models.IntegerField(null=True)                                             # RPM
+    fractional_cadence = models.DecimalField(null=True, max_digits=5, decimal_places=1)  # RPM
+    enhanced_altitude = models.DecimalField(null=True, max_digits=5, decimal_places=1)   #   X,XXX.X   meters
+    enhanced_speed = models.DecimalField(null=True, max_digits=5, decimal_places=3)      #      XX.XXX meters/second

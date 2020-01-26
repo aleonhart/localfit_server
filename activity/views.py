@@ -12,13 +12,13 @@ from .serializers import ActivityWalkFileSerializer, ActivityAltitudeSerializer,
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer)
-from .models import WalkData, ActivityFile
+from .models import ActivityData, ActivityFile
 
 
 @api_view(['GET'])
 def activity_heart_rate(request, filename):
     try:
-        data = WalkData.objects.filter(file__filename=filename).order_by('timestamp_utc')
+        data = ActivityData.objects.filter(file__filename=filename).order_by('timestamp_utc')
         serializer = ActivityHeartRateSerializer(data, many=True)
         return Response(serializer.data)
     except ActivityFile.DoesNotExist:
@@ -28,7 +28,7 @@ def activity_heart_rate(request, filename):
 @api_view(['GET'])
 def activity_altitude(request, filename):
     try:
-        data = WalkData.objects.filter(file__filename=filename).order_by('timestamp_utc')
+        data = ActivityData.objects.filter(file__filename=filename).order_by('timestamp_utc')
         serializer = ActivityAltitudeSerializer(data, many=True)
         return Response(serializer.data)
     except ActivityFile.DoesNotExist:
@@ -58,7 +58,7 @@ class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
     appropriate serializer for that activity.
     """
 
-    queryset = WalkData.objects.all()
+    queryset = ActivityData.objects.all()
 
     SPORT_TO_SERIALIZER = {
         (1, 0): ActivityRunFileUploadSerializer,              # Run: generic

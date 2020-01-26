@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
 # Internal
-from .models import ActivityFile, Session, WalkData
+from .models import ActivityFile, Session, ActivityData
 from localfitserver.utils import (
     format_timespan_for_display,
     format_distance_for_display,
@@ -25,8 +25,8 @@ class BaseActivityListSerializer(serializers.ListSerializer):
     def data(self):
         data = self._format_for_chart_js(self.instance, self.chart_field)
         response = {
-            'start_time': data[0]['t'],
-            'end_time': data[-1]['t'],
+            'start_time': data[0]['t'] if data else [],
+            'end_time': data[-1]['t'] if data else [],
             self.chart_field: data
         }
         return ReturnDict(response, serializer=self)
@@ -43,7 +43,7 @@ class ActivityHeartRateSerializer(serializers.ModelSerializer):
         return instance
 
     class Meta:
-        model = WalkData
+        model = ActivityData
         list_serializer_class = ActivityHeartRateListSerializer
         fields = ['timestamp_utc', 'heart_rate']
 
@@ -59,7 +59,7 @@ class ActivityAltitudeSerializer(serializers.ModelSerializer):
         return instance
 
     class Meta:
-        model = WalkData
+        model = ActivityData
         list_serializer_class = ActivityAltitudeListSerializer
         fields = ['timestamp_utc', 'altitude', 'enhanced_altitude']
 
@@ -73,7 +73,7 @@ class ActivityWalkDataSerializer(serializers.ModelSerializer):
                 if data['position_lat_deg'] and data['position_long_deg'] else None
 
     class Meta:
-        model = WalkData
+        model = ActivityData
         fields = ['position_lat_deg', 'position_long_deg']
 
 
@@ -108,14 +108,14 @@ class ActivityWalkFileListSerializer(serializers.ListSerializer):
         files = super(ActivityWalkFileListSerializer, self).data
         for file in files:
             session_data = file.pop('session')[0]
-            file.pop('activitywalkdata')  # TODO dont get this data from the DB in the first place
+            file.pop('activitydata')  # TODO dont get this data from the DB in the first place
             file.update(**session_data)
         return ReturnList(files, serializer=self)
 
 
 class ActivityWalkFileSerializer(serializers.ModelSerializer):
     session = ActivityWalkSessionSerializer(many=True, read_only=True)
-    activitywalkdata = ActivityWalkDataSerializer(many=True, read_only=True)
+    activitydata = ActivityWalkDataSerializer(many=True, read_only=True)
 
     @property
     def data(self):
@@ -133,7 +133,7 @@ class ActivityWalkFileSerializer(serializers.ModelSerializer):
         ret = super(ActivityWalkFileSerializer, self).data
         # Filter out records that were recorded by the watch before GPS was enabled
         # TODO consider replacing the None with the starting coordinate if we need other data later
-        ret['activitywalkdata'] = list(filter((None).__ne__, ret['activitywalkdata']))
+        ret['activitydata'] = list(filter((None).__ne__, ret['activitydata']))
 
         session_data = ret.pop('session')[0]
         ret.update(**session_data)
@@ -142,4 +142,4 @@ class ActivityWalkFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityFile
         list_serializer_class = ActivityWalkFileListSerializer
-        fields = ['activity_type', 'filename', 'session', 'activitywalkdata']
+        fields = ['activity_type', 'activity_category', 'filename', 'session', 'activitydata']

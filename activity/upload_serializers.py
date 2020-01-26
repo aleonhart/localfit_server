@@ -6,7 +6,7 @@ from rest_framework.parsers import FileUploadParser
 from fitparse import FitFile
 
 # Internal
-from .models import ActivityFile, Session, WalkData, YogaData
+from .models import ActivityFile, Session, ActivityData
 from localfitserver.utils import (
     convert_ant_timestamp_to_unix_timestamp,
     convert_semicircles_to_degrees,
@@ -89,7 +89,7 @@ class ActivityWalkFileUploadSerializer(BaseActivityFileUploadSerializer):
     ]
 
     def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='walk')
+        file = ActivityFile(filename=filename, activity_type='walk', activity_category='mobile')
         file.save()
         return file
 
@@ -120,13 +120,13 @@ class ActivityWalkFileUploadSerializer(BaseActivityFileUploadSerializer):
         }
 
     class Meta:
-        model = WalkData
+        model = ActivityData
 
 
 class ActivityRunFileUploadSerializer(ActivityWalkFileUploadSerializer):
 
     def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='run')
+        file = ActivityFile(filename=filename, activity_type='run', activity_category='mobile')
         file.save()
         return file
 
@@ -140,7 +140,7 @@ class ActivityYogaFileUploadSerializer(BaseActivityFileUploadSerializer):
     ]
 
     def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='yoga')
+        file = ActivityFile(filename=filename, activity_type='yoga', activity_category='static')
         file.save()
         return file
 
@@ -156,19 +156,19 @@ class ActivityYogaFileUploadSerializer(BaseActivityFileUploadSerializer):
         }
 
     class Meta:
-        model = YogaData
+        model = ActivityData
 
 
 class ActivityStairClimbingFileUploadSerializer(ActivityYogaFileUploadSerializer):
     def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='stairmaster')
+        file = ActivityFile(filename=filename, activity_type='stairmaster', activity_category='mobile')
         file.save()
         return file
 
 
 class ActivityCardioFileUploadSerializer(ActivityYogaFileUploadSerializer):
     def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='beat_saber')
+        file = ActivityFile(filename=filename, activity_type='beat_saber', activity_category='static')
         file.save()
         return file
 
