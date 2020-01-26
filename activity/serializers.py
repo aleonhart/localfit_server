@@ -10,6 +10,42 @@ from localfitserver.utils import (
     format_date_for_display)
 
 
+class ActivityHeartRateListSerializer(serializers.ListSerializer):
+    """
+    TODO
+    refactor this chartjs formatting into its own utility
+    """
+    def _format_for_chart_js(self, data):
+        return [
+            {
+                "t": value.timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+                "y": value.heart_rate if value.heart_rate != -1 else 0
+            } for value in data
+        ]
+
+    @property
+    def data(self):
+        data = self._format_for_chart_js(self.instance)
+        response = {
+            'start_time': data[0]['t'],
+            'end_time': data[-1]['t'],
+            'heart_rate': data
+        }
+        return ReturnDict(response, serializer=self)
+
+
+class ActivityHeartRateSerializer(serializers.ModelSerializer):
+
+    def to_representation(self, instance):
+        super(ActivityHeartRateSerializer, self).to_representation(instance)
+        return instance
+
+    class Meta:
+        model = WalkData
+        list_serializer_class = ActivityHeartRateListSerializer
+        fields = ['timestamp_utc', 'heart_rate']
+
+
 class ActivityAltitudeListSerializer(serializers.ListSerializer):
     """
     TODO

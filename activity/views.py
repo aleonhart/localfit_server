@@ -8,11 +8,21 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from fitparse import FitFile
 
 # Internal
-from .serializers import ActivityWalkFileSerializer, ActivityAltitudeSerializer
+from .serializers import ActivityWalkFileSerializer, ActivityAltitudeSerializer, ActivityHeartRateSerializer
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer)
 from .models import WalkData, ActivityFile
+
+
+@api_view(['GET'])
+def activity_heart_rate(request, filename):
+    try:
+        data = WalkData.objects.filter(file__filename=filename).order_by('timestamp_utc')
+        serializer = ActivityHeartRateSerializer(data, many=True)
+        return Response(serializer.data)
+    except ActivityFile.DoesNotExist:
+        return HttpResponse(status=404)
 
 
 @api_view(['GET'])
