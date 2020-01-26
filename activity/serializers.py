@@ -10,28 +10,30 @@ from localfitserver.utils import (
     format_date_for_display)
 
 
-class ActivityHeartRateListSerializer(serializers.ListSerializer):
-    """
-    TODO
-    refactor this chartjs formatting into its own utility
-    """
-    def _format_for_chart_js(self, data):
+class BaseActivityListSerializer(serializers.ListSerializer):
+    chart_field = None
+
+    def _format_for_chart_js(self, data, field):
         return [
             {
                 "t": value.timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
-                "y": value.heart_rate if value.heart_rate != -1 else 0
+                "y": getattr(value, field) if getattr(value, field) != -1 else 0
             } for value in data
         ]
 
     @property
     def data(self):
-        data = self._format_for_chart_js(self.instance)
+        data = self._format_for_chart_js(self.instance, self.chart_field)
         response = {
             'start_time': data[0]['t'],
             'end_time': data[-1]['t'],
-            'heart_rate': data
+            self.chart_field: data
         }
         return ReturnDict(response, serializer=self)
+
+
+class ActivityHeartRateListSerializer(BaseActivityListSerializer):
+    chart_field = 'heart_rate'
 
 
 class ActivityHeartRateSerializer(serializers.ModelSerializer):
@@ -46,28 +48,8 @@ class ActivityHeartRateSerializer(serializers.ModelSerializer):
         fields = ['timestamp_utc', 'heart_rate']
 
 
-class ActivityAltitudeListSerializer(serializers.ListSerializer):
-    """
-    TODO
-    refactor this chartjs formatting into its own utility
-    """
-    def _format_for_chart_js(self, data):
-        return [
-            {
-                "t": value.timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
-                "y": value.altitude if value.altitude != -1 else 0
-            } for value in data
-        ]
-
-    @property
-    def data(self):
-        altitude_data = self._format_for_chart_js(self.instance)
-        response = {
-            'start_time': altitude_data[0]['t'],
-            'end_time': altitude_data[-1]['t'],
-            'altitude_data': altitude_data
-        }
-        return ReturnDict(response, serializer=self)
+class ActivityAltitudeListSerializer(BaseActivityListSerializer):
+    chart_field = 'altitude'
 
 
 class ActivityAltitudeSerializer(serializers.ModelSerializer):
