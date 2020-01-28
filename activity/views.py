@@ -8,7 +8,7 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from fitparse import FitFile
 
 # Internal
-from .serializers import ActivityWalkFileSerializer, ActivityAltitudeSerializer, ActivityHeartRateSerializer
+from .serializers import ActivityWalkFileSerializer, ActivityAltitudeSerializer, ActivityHeartRateSerializer, ActivitiesSerializer
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer)
@@ -35,8 +35,18 @@ def activity_altitude(request, filename):
         return HttpResponse(status=404)
 
 
-class ActivityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
-    queryset = ActivityFile.objects.all().order_by('-session__start_time_utc')
+@api_view(['GET'])
+def activities(request):
+    try:
+        data = ActivityFile.objects.all().order_by('-start_time_utc')
+        serializer = ActivitiesSerializer(data, many=True)
+        return Response(serializer.data)
+    except ActivityFile.DoesNotExist:
+        return HttpResponse(status=404)
+
+
+class ActivityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
+    queryset = ActivityFile.objects.all().order_by('-start_time_utc')
     serializer_class = ActivityWalkFileSerializer
     lookup_field = 'filename'
 

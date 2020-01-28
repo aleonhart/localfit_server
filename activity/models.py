@@ -5,6 +5,7 @@ class ActivityFile(models.Model):
     filename = models.CharField(max_length=15, unique=True)
     activity_type = models.CharField(max_length=20)
     activity_category = models.CharField(max_length=20)
+    start_time_utc = models.DateTimeField()
 
 
 class Session(models.Model):

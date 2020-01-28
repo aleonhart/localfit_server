@@ -102,6 +102,26 @@ class ActivityWalkSessionSerializer(serializers.ModelSerializer):
         ]
 
 
+class ActivitiesListSerializer(serializers.ListSerializer):
+
+    @property
+    def data(self):
+        files = super(ActivitiesListSerializer, self).data
+        for file in files:
+            session_data = file.pop('session')[0]
+            file.update(**session_data)
+        return ReturnList(files, serializer=self)
+
+
+class ActivitiesSerializer(serializers.ModelSerializer):
+    session = ActivityWalkSessionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ActivityFile
+        list_serializer_class = ActivitiesListSerializer
+        fields = ['filename', 'activity_type', 'activity_category', 'start_time_utc', 'session']
+
+
 class ActivityWalkFileListSerializer(serializers.ListSerializer):
 
     @property

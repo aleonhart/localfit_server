@@ -20,7 +20,7 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
     time_fields = []
     gps_fields = []
 
-    def _save_activity_file(self, filename):
+    def _save_activity_file(self, filename, start_time_utc):
         raise ValidationError("Child class must implement this method!")
 
     def _get_activity_session_data(self, fit_file):
@@ -37,7 +37,7 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
         newfiledata = None
         with transaction.atomic():
             try:
-                file = self._save_activity_file(validated_data['filename'])
+                file = self._save_activity_file(validated_data['filename'], validated_data['session_data']['start_time_utc'])
             except Exception as e:
                 raise ValidationError("Failed to save file")
 
@@ -88,8 +88,11 @@ class ActivityWalkFileUploadSerializer(BaseActivityFileUploadSerializer):
         'position_long'
     ]
 
-    def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='walk', activity_category='mobile')
+    def _save_activity_file(self, filename, start_time_utc):
+        file = ActivityFile(filename=filename,
+                            start_time_utc=start_time_utc,
+                            activity_type='walk',
+                            activity_category='mobile')
         file.save()
         return file
 
@@ -125,8 +128,11 @@ class ActivityWalkFileUploadSerializer(BaseActivityFileUploadSerializer):
 
 class ActivityRunFileUploadSerializer(ActivityWalkFileUploadSerializer):
 
-    def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='run', activity_category='mobile')
+    def _save_activity_file(self, filename, start_time_utc):
+        file = ActivityFile(filename=filename,
+                            start_time_utc=start_time_utc,
+                            activity_type='run',
+                            activity_category='mobile')
         file.save()
         return file
 
@@ -139,8 +145,11 @@ class ActivityYogaFileUploadSerializer(BaseActivityFileUploadSerializer):
         'timestamp'
     ]
 
-    def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='yoga', activity_category='static')
+    def _save_activity_file(self, filename, start_time_utc):
+        file = ActivityFile(filename=filename,
+                            start_time_utc=start_time_utc,
+                            activity_type='yoga',
+                            activity_category='static')
         file.save()
         return file
 
@@ -160,15 +169,21 @@ class ActivityYogaFileUploadSerializer(BaseActivityFileUploadSerializer):
 
 
 class ActivityStairClimbingFileUploadSerializer(ActivityYogaFileUploadSerializer):
-    def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='stairmaster', activity_category='mobile')
+    def _save_activity_file(self, filename, start_time_utc):
+        file = ActivityFile(filename=filename,
+                            start_time_utc=start_time_utc,
+                            activity_type='stairmaster',
+                            activity_category='mobile')
         file.save()
         return file
 
 
 class ActivityCardioFileUploadSerializer(ActivityYogaFileUploadSerializer):
-    def _save_activity_file(self, filename):
-        file = ActivityFile(filename=filename, activity_type='beat_saber', activity_category='static')
+    def _save_activity_file(self, filename, start_time_utc):
+        file = ActivityFile(filename=filename,
+                            start_time_utc=start_time_utc,
+                            activity_type='beat_saber',
+                            activity_category='static')
         file.save()
         return file
 
