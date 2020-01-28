@@ -7,7 +7,8 @@ from .models import ActivityFile, Session, ActivityData
 from localfitserver.utils import (
     format_timespan_for_display,
     format_distance_for_display,
-    format_date_for_display)
+    format_date_for_display,
+    format_data_for_google_maps_api)
 
 
 class BaseActivityListSerializer(serializers.ListSerializer):
@@ -62,6 +63,27 @@ class ActivityAltitudeSerializer(serializers.ModelSerializer):
         model = ActivityData
         list_serializer_class = ActivityAltitudeListSerializer
         fields = ['timestamp_utc', 'altitude', 'enhanced_altitude']
+
+
+class ActivityMapDataListSerializer(serializers.ListSerializer):
+    @property
+    def data(self):
+        ret = super(ActivityMapDataListSerializer, self).data
+        # Filter out records that were recorded by the watch before GPS was established
+        ret = list(filter((None).__ne__, ret))
+        return ReturnList(ret, serializer=self)
+
+
+class ActivityMapDataSerializer(serializers.ModelSerializer):
+
+    def to_representation(self, instance):
+        data = super(ActivityMapDataSerializer, self).to_representation(instance)
+        return format_data_for_google_maps_api(data['position_lat_deg'], data['position_long_deg'])
+
+    class Meta:
+        model = ActivityData
+        list_serializer_class = ActivityMapDataListSerializer
+        fields = ['position_lat_deg', 'position_long_deg']
 
 
 class ActivityWalkDataSerializer(serializers.ModelSerializer):

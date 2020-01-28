@@ -84,3 +84,13 @@ def format_date_for_display(date):
     date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%f%z")
     return date_obj.strftime("%A %H:%M%p, %B %d, %Y")
 
+
+def format_data_for_google_maps_api(lat_degrees, long_degrees):
+    """
+    Formats a single WalkData record for Google Maps API.
+    Meant to be called by serializer to_representation()
+
+    Example:
+    { lat: 41.365286, lng: -124.018488 }
+    """
+    return {'lat': lat_degrees, 'lng': long_degrees} if lat_degrees and long_degrees else None

@@ -8,7 +8,7 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from fitparse import FitFile
 
 # Internal
-from .serializers import ActivityMetaDataSerializer, ActivityAltitudeSerializer, ActivityHeartRateSerializer, ActivitiesSerializer
+from .serializers import ActivityMapDataSerializer, ActivityMetaDataSerializer, ActivityAltitudeSerializer, ActivityHeartRateSerializer, ActivitiesSerializer
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer)
@@ -36,10 +36,10 @@ def activity_altitude(request, filename):
 
 
 @api_view(['GET'])
-def activities(request):
+def activity_map(request, filename):
     try:
-        data = ActivityFile.objects.all().order_by('-start_time_utc')
-        serializer = ActivitiesSerializer(data, many=True)
+        data = ActivityData.objects.filter(file__filename=filename).order_by('timestamp_utc')
+        serializer = ActivityMapDataSerializer(data, many=True)
         return Response(serializer.data)
     except ActivityFile.DoesNotExist:
         return HttpResponse(status=404)
@@ -50,6 +50,16 @@ def activity(request, filename):
     try:
         data = ActivityFile.objects.get(filename=filename)
         serializer = ActivityMetaDataSerializer(data)
+        return Response(serializer.data)
+    except ActivityFile.DoesNotExist:
+        return HttpResponse(status=404)
+
+
+@api_view(['GET'])
+def activities(request):
+    try:
+        data = ActivityFile.objects.all().order_by('-start_time_utc')
+        serializer = ActivitiesSerializer(data, many=True)
         return Response(serializer.data)
     except ActivityFile.DoesNotExist:
         return HttpResponse(status=404)
