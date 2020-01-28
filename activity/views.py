@@ -8,7 +8,7 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from fitparse import FitFile
 
 # Internal
-from .serializers import ActivityWalkFileSerializer, ActivityAltitudeSerializer, ActivityHeartRateSerializer, ActivitiesSerializer
+from .serializers import ActivityMetaDataSerializer, ActivityAltitudeSerializer, ActivityHeartRateSerializer, ActivitiesSerializer
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer)
@@ -45,19 +45,14 @@ def activities(request):
         return HttpResponse(status=404)
 
 
-class ActivityViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
-    queryset = ActivityFile.objects.all().order_by('-start_time_utc')
-    serializer_class = ActivityWalkFileSerializer
-    lookup_field = 'filename'
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = ActivityWalkFileSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = ActivityWalkFileSerializer(queryset, many=True)
+@api_view(['GET'])
+def activity(request, filename):
+    try:
+        data = ActivityFile.objects.get(filename=filename)
+        serializer = ActivityMetaDataSerializer(data)
         return Response(serializer.data)
+    except ActivityFile.DoesNotExist:
+        return HttpResponse(status=404)
 
 
 class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):

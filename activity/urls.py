@@ -13,6 +13,7 @@ router.register(r'upload', views.ActivityFileUpload)
 urlpatterns = [
     path('', include(router.urls)),
     path('info/', views.activities),
+    path('info/<filename>/', views.activity),
     path('altitude/<filename>/', views.activity_altitude),
     path('heart_rate/<filename>/', views.activity_heart_rate),
 
