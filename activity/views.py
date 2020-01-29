@@ -38,8 +38,8 @@ def activity_altitude(request, filename):
 @api_view(['GET'])
 def activity_map(request, filename):
     try:
-        data = ActivityData.objects.filter(file__filename=filename).order_by('timestamp_utc')
-        serializer = ActivityMapDataSerializer(data, many=True)
+        data = ActivityFile.objects.get(filename=filename)
+        serializer = ActivityMapDataSerializer(data)
         return Response(serializer.data)
     except ActivityFile.DoesNotExist:
         return HttpResponse(status=404)

@@ -65,27 +65,6 @@ class ActivityAltitudeSerializer(serializers.ModelSerializer):
         fields = ['timestamp_utc', 'altitude', 'enhanced_altitude']
 
 
-class ActivityMapDataListSerializer(serializers.ListSerializer):
-    @property
-    def data(self):
-        ret = super(ActivityMapDataListSerializer, self).data
-        # Filter out records that were recorded by the watch before GPS was established
-        ret = list(filter((None).__ne__, ret))
-        return ReturnList(ret, serializer=self)
-
-
-class ActivityMapDataSerializer(serializers.ModelSerializer):
-
-    def to_representation(self, instance):
-        data = super(ActivityMapDataSerializer, self).to_representation(instance)
-        return format_data_for_google_maps_api(data['position_lat_deg'], data['position_long_deg'])
-
-    class Meta:
-        model = ActivityData
-        list_serializer_class = ActivityMapDataListSerializer
-        fields = ['position_lat_deg', 'position_long_deg']
-
-
 class ActivityWalkDataSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
@@ -122,6 +101,33 @@ class ActivityWalkSessionSerializer(serializers.ModelSerializer):
             'total_strides',
             'total_calories',
         ]
+
+
+class ActivityMapSessionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Session
+        fields = [
+            'start_position_lat_deg',
+            'start_position_long_deg',
+        ]
+
+
+class ActivityMapDataSerializer(serializers.ModelSerializer):
+    session = ActivityMapSessionSerializer(many=True, read_only=True)
+    activitydata = ActivityWalkDataSerializer(many=True, read_only=True)
+
+    @property
+    def data(self):
+        ret = super().data
+        session_data = ret.pop('session')[0]
+        ret.update(**session_data)
+        ret['activitydata'] = list(filter((None).__ne__, ret['activitydata']))
+        return ReturnDict(ret, serializer=self)
+
+    class Meta:
+        model = ActivityFile
+        fields = ['session', 'activitydata']
 
 
 class ActivityMetaDataSerializer(serializers.ModelSerializer):
