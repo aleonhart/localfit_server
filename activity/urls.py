@@ -7,7 +7,7 @@ from . import views
 
 
 router = routers.DefaultRouter()
-router.register(r'upload', views.ActivityFileUpload)
+router.register(r'upload/activity', views.ActivityFileUpload)
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -16,5 +16,4 @@ urlpatterns = [
     path('map/<filename>/', views.activity_map),
     path('altitude/<filename>/', views.activity_altitude),
     path('heart_rate/<filename>/', views.activity_heart_rate),
-
 ]

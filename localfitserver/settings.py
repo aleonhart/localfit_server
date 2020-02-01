@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'monitor',
-    'activity'
+    'activity',
+    'totals',
 ]
 
 MIDDLEWARE = [

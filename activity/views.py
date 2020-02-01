@@ -65,6 +65,7 @@ def activities(request):
         return HttpResponse(status=404)
 
 
+
 class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
     """
     When the user uploads an ANT FIT ACTIVITY file, it will not be clear

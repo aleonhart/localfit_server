@@ -186,5 +186,3 @@ class ActivityCardioFileUploadSerializer(ActivityYogaFileUploadSerializer):
                             activity_category='static')
         file.save()
         return file
-
-
