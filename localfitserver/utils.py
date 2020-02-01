@@ -75,6 +75,8 @@ def format_distance_for_display(meters):
     """
     Sorry! I'm from the USA. I'm defaulting
     everything to miles.
+
+    Calculates meters to miles.
     """
 
     return round(Decimal(meters * Decimal(0.000621371192)), 2)
@@ -83,6 +85,16 @@ def format_distance_for_display(meters):
 def format_date_for_display(date):
     date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%f%z")
     return date_obj.strftime("%A %H:%M%p, %B %d, %Y")
+
+
+def format_duration_for_display(seconds):
+    """
+    Converts seconds to HH:MM:SS
+    """
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+
+    return f"{hours} hours, {minutes} minutes and {seconds} seconds"
 
 
 def format_data_for_google_maps_api(lat_degrees, long_degrees):
