@@ -11,13 +11,47 @@ import pytz
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import FileUploadParser
-from rest_framework.utils.serializer_helpers import ReturnList
+from rest_framework.utils.serializer_helpers import ReturnList, ReturnDict
 from rest_framework.exceptions import ValidationError
 
 
 # Internal
 from .models import MonitorStressFile, MonitorStressData, MonitorHeartRateData
 from localfitserver.utils import convert_ant_timestamp_to_unix_timestamp, bitswap_ant_timestamp_to_unix_timestamp
+
+
+class BaseListSerializer(serializers.ListSerializer):
+    chart_field = None
+
+    def _format_for_chart_js(self, data, field):
+        return [
+            {
+                "t": value.timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+                "y": getattr(value, field) if getattr(value, field) != -1 else 0
+            } for value in data
+        ]
+
+    @property
+    def data(self):
+        data = self._format_for_chart_js(self.instance, self.chart_field)
+        response = {
+            'start_time': data[0]['t'] if data else [],
+            'end_time': data[-1]['t'] if data else [],
+            self.chart_field: data
+        }
+        return ReturnDict(response, serializer=self)
+
+
+class HeartRateDataListSerializer(BaseListSerializer):
+    chart_field = 'heart_rate'
+
+
+class HeartRateDataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MonitorHeartRateData
+        list_serializer_class = HeartRateDataListSerializer
+        fields = ['timestamp_utc', 'heart_rate']
 
 
 class StressDataListSerializer(serializers.ListSerializer):

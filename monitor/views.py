@@ -8,8 +8,34 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from django.db import IntegrityError
 
 # Internal
-from .serializers import MonitorHeartRateFileUploadSerializer, StressDataSerializer
+from .serializers import MonitorHeartRateFileUploadSerializer, StressDataSerializer, HeartRateDataSerializer
 from .models import MonitorStressData, MonitorHeartRateData
+
+
+class HeartRateList(viewsets.GenericViewSet, mixins.ListModelMixin):
+    queryset = MonitorHeartRateData.objects.all()
+    serializer_class = HeartRateDataSerializer
+
+    def get_queryset(self):
+        queryset = MonitorHeartRateData.objects.all()
+        start_date_str = self.request.query_params.get('start_date')
+        end_date_str = self.request.query_params.get('end_date')
+        if start_date_str:
+            start_date_dt = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S")
+            queryset = queryset.filter(timestamp_utc__gte=start_date_dt.date())
+        if end_date_str:
+            end_date_dt = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M:%S")
+            queryset = queryset.filter(timestamp_utc__lt=end_date_dt.date())
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        page = self.paginate_queryset(self.get_queryset())
+        if page:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(serializer.data)
 
 
 class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
