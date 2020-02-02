@@ -28,3 +28,11 @@ class MonitorStressData(models.Model):
     file = models.ForeignKey(MonitorStressFile, on_delete=models.CASCADE)
     stress_level_time = models.DateTimeField()  # Field 4
     stress_level_value = models.IntegerField()  # Field 7
+
+
+class MonitorHeartRateData(models.Model):
+
+    monitor_stress_data_id = models.AutoField(primary_key=True)
+    file = models.ForeignKey(MonitorStressFile, on_delete=models.CASCADE)
+    timestamp_utc = models.DateTimeField()
+    heart_rate = models.IntegerField()

@@ -5,6 +5,8 @@ import csv
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from fitparse import FitFile
+
 import pytz
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
@@ -14,8 +16,8 @@ from rest_framework.exceptions import ValidationError
 
 
 # Internal
-from .models import MonitorStressFile, MonitorStressData
-from localfitserver.utils import convert_ant_timestamp_to_unix_timestamp
+from .models import MonitorStressFile, MonitorStressData, MonitorHeartRateData
+from localfitserver.utils import convert_ant_timestamp_to_unix_timestamp, bitswap_ant_timestamp_to_unix_timestamp
 
 
 class StressDataListSerializer(serializers.ListSerializer):
@@ -121,37 +123,51 @@ Field 14=units
 """
 
 
-class MonitorStressFileUploadSerializer(serializers.Serializer):
+class MonitorHeartRateFileUploadSerializer(serializers.Serializer):
     parser_class = (FileUploadParser,)
+
+    generic_fields = [
+        'heart_rate'
+    ]
+    time_fields = [
+        'timestamp'
+    ]
+    time_16_fields = [
+        'timestamp_16'
+    ]
 
     def validate(self, attrs):
         if not self.initial_data.get('file'):
             raise ValidationError({"file": "File must be provided"})
 
-        try:
-            open_file = open(self.initial_data['file'], "r", encoding="utf8")
-        except FileNotFoundError:
-            raise ValidationError({"file": "File not found"})
-        attrs['file'] = open_file
+        fit_file = FitFile(self.initial_data['file'])
+        attrs['file'] = fit_file
+        attrs['filename'] = self.initial_data['file'].split("/")[-1].split(".")[0]
         return attrs
 
     def create(self, validated_data):
+        newfiledata = None
+        most_recent_timestamp_ant_epoch = None
 
         with transaction.atomic():
-            filename = validated_data['file'].name.split("/")[-1].split(".")[0]
-            newfile = MonitorStressFile(filename=filename)
-            newfile.save()
+            file = MonitorStressFile(filename=validated_data['filename'])
+            file.save()
 
-            reader = csv.reader(validated_data['file'])
-            for row in reader:
-                # stress data
-                # TODO bulk upload
-                if row[0] == "Data" and row[2] == "stress_level":
-                    newfiledata = MonitorStressData(
-                        file=newfile,
-                        stress_level_time=convert_ant_timestamp_to_unix_timestamp(row[4]),
-                        stress_level_value=row[7],
-                    )
+            for row in validated_data['file'].get_messages('monitoring'):
+                data = {'file': file}
+                for col in row:
+                    if col.name in self.generic_fields:
+                        data[col.name] = col.value
+                    if col.name in self.time_fields:
+                        data[f'{col.name}_utc'] = convert_ant_timestamp_to_unix_timestamp(col.value)
+                        most_recent_timestamp_ant_epoch = col.raw_value
+                    if col.name in self.time_16_fields:
+                        timestamp = bitswap_ant_timestamp_to_unix_timestamp(most_recent_timestamp_ant_epoch, col.raw_value)
+                        data['timestamp_utc'] = timestamp
+
+                # throw out the rows without heart rate data
+                if data.get('heart_rate'):
+                    newfiledata = self.Meta.model(**data)
                     newfiledata.save()
 
         return newfiledata
@@ -160,4 +176,4 @@ class MonitorStressFileUploadSerializer(serializers.Serializer):
         pass
 
     class Meta:
-        model = MonitorStressData
+        model = MonitorHeartRateData

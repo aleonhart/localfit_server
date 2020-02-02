@@ -3,11 +3,11 @@ from django.urls import include, path
 from rest_framework import routers
 
 # Internal
-from .views import MonitorFileStressUpload, StressList
+from .views import MonitorFileHeartRateUpload, StressList
 
 
 router = routers.DefaultRouter()
-router.register(r'gvamonitorupload', MonitorFileStressUpload)
+router.register(r'heart_rate/upload', MonitorFileHeartRateUpload)
 router.register(r'stress_data', StressList)
 
 urlpatterns = [

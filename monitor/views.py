@@ -8,8 +8,8 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from django.db import IntegrityError
 
 # Internal
-from .serializers import MonitorStressFileUploadSerializer, StressDataSerializer
-from .models import MonitorStressData
+from .serializers import MonitorHeartRateFileUploadSerializer, StressDataSerializer
+from .models import MonitorStressData, MonitorHeartRateData
 
 
 class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
@@ -38,10 +38,10 @@ class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
         return Response(serializer.data)
 
 
-class MonitorFileStressUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
+class MonitorFileHeartRateUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
 
-    queryset = MonitorStressData.objects.all()
-    serializer_class = MonitorStressFileUploadSerializer
+    queryset = MonitorHeartRateData.objects.all()
+    serializer_class = MonitorHeartRateFileUploadSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

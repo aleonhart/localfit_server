@@ -4,12 +4,29 @@ from decimal import Decimal
 from geopy.geocoders import Nominatim
 
 
+def bitswap_ant_timestamp_to_unix_timestamp(timestamp_32, timestamp_16):
+    """
+    To save space, FIT stores timestamps in two formats:
+    timestamp: 32 bits, stored as seconds since ANT epoch
+    timestamp_16: 16-bit "suffix" since last timestamp
+
+    In order to convert a timestamp_16 16-bit suffix into a
+    32-bit ANT timestamp, you must bitswap the last 16 bits.
+
+    """
+    DIFF_ANT_EPOCH_UNIX_EPOC_SECONDS = 631065600
+    timestamp_32 += (timestamp_16 - (timestamp_32 & 0xFFFF)) & 0xFFFF
+    ant_timestamp = datetime.fromtimestamp(timestamp_32)
+    unix_timestamp = ant_timestamp + timedelta(seconds=DIFF_ANT_EPOCH_UNIX_EPOC_SECONDS)
+    return unix_timestamp
+
+
 def convert_ant_timestamp_to_unix_timestamp(ant_timestamp):
     """
     ANT does not utilize the traditional UNIX epoch.
     ANT epoch: 1989-12-31 00:00:00 UTC
     UNIX epoch: 1970-01-01 00:00:00 UTC
-    UNIX - ANT = 631065600 seconds
+    UNIX - ANT = 631065600 seconds (~20 years)
     """
 
     DIFF_ANT_EPOCH_UNIX_EPOC_MILLIS = 631065600
