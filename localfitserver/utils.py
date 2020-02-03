@@ -1,7 +1,9 @@
 # 3rd Party
 from datetime import timedelta, datetime
+from django.utils.timezone import make_aware
 from decimal import Decimal
 from geopy.geocoders import Nominatim
+import pytz
 
 
 def bitswap_ant_timestamp_to_unix_timestamp(timestamp_32, timestamp_16):
@@ -16,12 +18,12 @@ def bitswap_ant_timestamp_to_unix_timestamp(timestamp_32, timestamp_16):
     """
     DIFF_ANT_EPOCH_UNIX_EPOC_SECONDS = 631065600
     timestamp_32 += (timestamp_16 - (timestamp_32 & 0xFFFF)) & 0xFFFF
-    ant_timestamp = datetime.fromtimestamp(timestamp_32)
+    ant_timestamp = datetime.fromtimestamp(timestamp_32, tz=pytz.UTC)
     unix_timestamp = ant_timestamp + timedelta(seconds=DIFF_ANT_EPOCH_UNIX_EPOC_SECONDS)
     return unix_timestamp
 
 
-def convert_ant_timestamp_to_unix_timestamp(ant_timestamp):
+def convert_ant_timestamp_to_unix_timestamp(ant_timestamp_utc):
     """
     ANT does not utilize the traditional UNIX epoch.
     ANT epoch: 1989-12-31 00:00:00 UTC
@@ -30,8 +32,8 @@ def convert_ant_timestamp_to_unix_timestamp(ant_timestamp):
     """
 
     DIFF_ANT_EPOCH_UNIX_EPOC_MILLIS = 631065600
-    unix_timestamp = ant_timestamp + timedelta(milliseconds=DIFF_ANT_EPOCH_UNIX_EPOC_MILLIS)
-    return unix_timestamp
+    unix_timestamp_utc = make_aware(ant_timestamp_utc + timedelta(milliseconds=DIFF_ANT_EPOCH_UNIX_EPOC_MILLIS), timezone=pytz.UTC)
+    return unix_timestamp_utc
 
 
 def convert_semicircles_to_degrees(semicircles):
@@ -100,8 +102,12 @@ def format_distance_for_display(meters):
 
 
 def format_date_for_display(date):
-    date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%f%z")
-    return date_obj.strftime("%A %H:%M%p, %B %d, %Y")
+    """
+    Format:
+    04:10PM, Monday, December 30, 2019
+    """
+    date_obj = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z")
+    return date_obj.strftime("%I:%M%p, %A, %B %d, %Y")
 
 
 def format_duration_for_display(seconds):

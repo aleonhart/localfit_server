@@ -1,4 +1,5 @@
 # 3rd Party
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
@@ -7,8 +8,7 @@ from .models import ActivityFile, Session, ActivityData
 from localfitserver.utils import (
     format_timespan_for_display,
     format_distance_for_display,
-    format_date_for_display,
-    format_data_for_google_maps_api)
+    format_date_for_display)
 
 
 class BaseActivityListSerializer(serializers.ListSerializer):
@@ -17,7 +17,7 @@ class BaseActivityListSerializer(serializers.ListSerializer):
     def _format_for_chart_js(self, data, field):
         return [
             {
-                "t": value.timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+                "t": timezone.localtime(value.timestamp_utc),
                 "y": getattr(value, field) if getattr(value, field) != -1 else 0
             } for value in data
         ]
@@ -26,8 +26,8 @@ class BaseActivityListSerializer(serializers.ListSerializer):
     def data(self):
         data = self._format_for_chart_js(self.instance, self.chart_field)
         response = {
-            'start_time': data[0]['t'] if data else [],
-            'end_time': data[-1]['t'] if data else [],
+            'start_time': timezone.localtime(data[0]['t']) if data else [],
+            'end_time': timezone.localtime(data[-1]['t']) if data else [],
             self.chart_field: data
         }
         return ReturnDict(response, serializer=self)

@@ -1,14 +1,15 @@
 # 3rd Party
 from django.db import transaction
+from django.utils.timezone import make_aware
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FileUploadParser
 from fitparse import FitFile
+import pytz
 
 # Internal
 from .models import ActivityFile, Session, ActivityData
 from localfitserver.utils import (
-    convert_ant_timestamp_to_unix_timestamp,
     convert_semicircles_to_degrees,
     convert_lat_long_to_location_name)
 
@@ -53,7 +54,7 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
                     if record_data.name in self.generic_fields:
                         rowdict[record_data.name] = record_data.value
                     if record_data.name in self.time_fields:
-                        rowdict[f'{record_data.name}_utc'] = convert_ant_timestamp_to_unix_timestamp(record_data.value)
+                        rowdict[f'{record_data.name}_utc'] = make_aware(record_data.value, timezone=pytz.UTC)
                     if record_data.name in self.gps_fields:
                         rowdict[f'{record_data.name}_sem'] = record_data.value
                         rowdict[f'{record_data.name}_deg'] = convert_semicircles_to_degrees(record_data.value)
@@ -68,8 +69,6 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
 
 
 class ActivityWalkFileUploadSerializer(BaseActivityFileUploadSerializer):
-    # TODO someday consider converting this to using ANT's file ids and field specifications
-    # TODO can fitparse library "fields" value handle this?
     generic_fields = [
         'distance',
         'altitude',
@@ -101,7 +100,7 @@ class ActivityWalkFileUploadSerializer(BaseActivityFileUploadSerializer):
         start_position_lat_deg = convert_semicircles_to_degrees(session_data.get('start_position_lat').value)
         start_position_long_deg = convert_semicircles_to_degrees(session_data.get('start_position_long').value)
         return {
-            'start_time_utc': convert_ant_timestamp_to_unix_timestamp(session_data.get('start_time').value),
+            'start_time_utc': make_aware(session_data.get('start_time').value, timezone=pytz.UTC),
             'start_position_lat_sem': session_data.get('start_position_lat').value,
             'start_position_long_sem': session_data.get('start_position_long').value,
             'start_position_lat_deg': start_position_lat_deg,
@@ -156,7 +155,7 @@ class ActivityYogaFileUploadSerializer(BaseActivityFileUploadSerializer):
     def _get_activity_session_data(self, fit_file):
         session_data = [row for row in fit_file.get_messages('session')][0]
         return {
-            'start_time_utc': convert_ant_timestamp_to_unix_timestamp(session_data.get('start_time').value),
+            'start_time_utc': make_aware(session_data.get('start_time').value, timezone=pytz.UTC),
             'total_elapsed_time': session_data.get('total_elapsed_time').value,
             'total_timer_time': session_data.get('total_timer_time').value,
             'total_calories': session_data.get('total_calories').value,
