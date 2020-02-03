@@ -7,13 +7,13 @@ from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from fitparse import FitFile
 
-import pytz
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.utils.serializer_helpers import ReturnList, ReturnDict
 from rest_framework.exceptions import ValidationError
-
+import pytz
 
 # Internal
 from .models import MonitorStressFile, MonitorStressData, MonitorHeartRateData
@@ -26,7 +26,7 @@ class BaseListSerializer(serializers.ListSerializer):
     def _format_for_chart_js(self, data, field):
         return [
             {
-                "t": value.timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+                "t": timezone.localtime(value.timestamp_utc).strftime("%Y-%m-%d %H:%M:%S"),
                 "y": getattr(value, field) if getattr(value, field) != -1 else 0
             } for value in data
         ]
@@ -193,7 +193,7 @@ class MonitorHeartRateFileUploadSerializer(serializers.Serializer):
                     if col.name in self.generic_fields:
                         data[col.name] = col.value
                     if col.name in self.time_fields:
-                        data[f'{col.name}_utc'] = convert_ant_timestamp_to_unix_timestamp(col.value)
+                        data[f'{col.name}_utc'] = timezone.make_aware(col.value, timezone=pytz.UTC)
                         most_recent_timestamp_ant_epoch = col.raw_value
                     if col.name in self.time_16_fields:
                         timestamp = bitswap_ant_timestamp_to_unix_timestamp(most_recent_timestamp_ant_epoch, col.raw_value)
