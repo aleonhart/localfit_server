@@ -40,7 +40,7 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
             try:
                 file = self._save_activity_file(validated_data['filename'], validated_data['session_data']['start_time_utc'])
             except Exception as e:
-                raise ValidationError("Failed to save file")
+                raise ValidationError(e)
 
             try:
                 session = Session(file=file, **validated_data['session_data'])

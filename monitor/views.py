@@ -2,14 +2,17 @@
 from datetime import datetime
 
 # 3rd Party
+from django.utils import timezone
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from django.db import IntegrityError
+import pytz
 
 # Internal
 from .serializers import MonitorHeartRateFileUploadSerializer, StressDataSerializer, HeartRateDataSerializer
 from .models import MonitorStressData, MonitorHeartRateData
+from localfitserver import settings
 
 
 class HeartRateList(viewsets.GenericViewSet, mixins.ListModelMixin):
@@ -21,10 +24,10 @@ class HeartRateList(viewsets.GenericViewSet, mixins.ListModelMixin):
         start_date_str = self.request.query_params.get('start_date')
         end_date_str = self.request.query_params.get('end_date')
         if start_date_str:
-            start_date_dt = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S")
+            start_date_dt = timezone.make_aware(datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S"), timezone=pytz.timezone(settings.TIME_ZONE))
             queryset = queryset.filter(timestamp_utc__gte=start_date_dt.date())
         if end_date_str:
-            end_date_dt = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M:%S")
+            end_date_dt = timezone.make_aware(datetime.strptime(end_date_str, "%Y-%m-%d %H:%M:%S"), timezone=pytz.timezone(settings.TIME_ZONE))
             queryset = queryset.filter(timestamp_utc__lt=end_date_dt.date())
         return queryset
 
