@@ -25,11 +25,12 @@ class TotalsSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super(TotalsSerializer, self).to_representation(instance)
         data['timer_time'] = format_duration_for_display(data['timer_time']) if data.get('timer_time') else None
-        data['distance'] = format_distance_for_display(data['distance']) if data.get('distance') else None
+        data['distance'] = format_distance_for_display(data['distance'], decimals=0) if data.get('distance') else None
+        data['calories'] = f"{data['calories']:,}"
         return data
 
     class Meta:
         model = TotalsFile
         list_serializer_class = TotalsListSerializer
 
-        fields = '__all__'
+        fields = ['timer_time', 'distance', 'calories']

@@ -90,7 +90,7 @@ def format_timespan_for_display(seconds):
     return str(timedelta(seconds=int(seconds)))
 
 
-def format_distance_for_display(meters):
+def format_distance_for_display(meters, decimals=2):
     """
     Sorry! I'm from the USA. I'm defaulting
     everything to miles.
@@ -98,7 +98,7 @@ def format_distance_for_display(meters):
     Calculates meters to miles.
     """
 
-    return round(Decimal(meters * Decimal(0.000621371192)), 2)
+    return round(Decimal(meters * Decimal(0.000621371192)), decimals)
 
 
 def format_date_for_display(date):
@@ -117,7 +117,8 @@ def format_duration_for_display(seconds):
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
 
-    return f"{hours} hours, {minutes} minutes and {seconds} seconds"
+    # return f"{hours} hours, {minutes} minutes and {seconds} seconds"
+    return hours
 
 
 def format_data_for_google_maps_api(lat_degrees, long_degrees):

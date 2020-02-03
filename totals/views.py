@@ -13,8 +13,8 @@ from .models import TotalsFile
 
 @api_view(['GET'])
 def totals(request):
-    data = TotalsFile.objects.all()
-    serializer = TotalsSerializer(data, many=True)
+    data = TotalsFile.objects.get(sport='running')
+    serializer = TotalsSerializer(data)
     return Response(serializer.data)
 
 
