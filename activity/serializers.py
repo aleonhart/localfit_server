@@ -9,31 +9,10 @@ from localfitserver.utils import (
     format_timespan_for_display,
     format_distance_for_display,
     format_date_for_display)
+from localfitserver.base_serializers import BaseChartJSListSerializer
 
 
-class BaseActivityListSerializer(serializers.ListSerializer):
-    chart_field = None
-
-    def _format_for_chart_js(self, data, field):
-        return [
-            {
-                "t": timezone.localtime(value.timestamp_utc),
-                "y": getattr(value, field) if getattr(value, field) != -1 else 0
-            } for value in data
-        ]
-
-    @property
-    def data(self):
-        data = self._format_for_chart_js(self.instance, self.chart_field)
-        response = {
-            'start_time': timezone.localtime(data[0]['t']) if data else [],
-            'end_time': timezone.localtime(data[-1]['t']) if data else [],
-            self.chart_field: data
-        }
-        return ReturnDict(response, serializer=self)
-
-
-class ActivityHeartRateListSerializer(BaseActivityListSerializer):
+class ActivityHeartRateListSerializer(BaseChartJSListSerializer):
     chart_field = 'heart_rate'
 
 
@@ -49,7 +28,7 @@ class ActivityHeartRateSerializer(serializers.ModelSerializer):
         fields = ['timestamp_utc', 'heart_rate']
 
 
-class ActivityAltitudeListSerializer(BaseActivityListSerializer):
+class ActivityAltitudeListSerializer(BaseChartJSListSerializer):
     chart_field = 'altitude'
 
 

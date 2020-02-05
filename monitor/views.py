@@ -51,10 +51,10 @@ class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
         end_date_str = self.request.query_params.get('end_date')
         if start_date_str:
             start_date_dt = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S")
-            queryset = queryset.filter(stress_level_time__gte=start_date_dt.date())
+            queryset = queryset.filter(stress_level_time_utc__gte=start_date_dt.date())
         if end_date_str:
             end_date_dt = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M:%S")
-            queryset = queryset.filter(stress_level_time__lt=end_date_dt.date())
+            queryset = queryset.filter(stress_level_time_utc__lt=end_date_dt.date())
         return queryset
 
     def list(self, request, *args, **kwargs):

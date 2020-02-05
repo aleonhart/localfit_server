@@ -14,31 +14,10 @@ import pytz
 # Internal
 from .models import MonitorFile, StressData, HeartRateData, RestingMetRateData
 from localfitserver.utils import bitswap_ant_timestamp_to_unix_timestamp
+from localfitserver.base_serializers import BaseChartJSListSerializer
 
 
-class BaseListSerializer(serializers.ListSerializer):
-    chart_field = None
-
-    def _format_for_chart_js(self, data, field):
-        return [
-            {
-                "t": timezone.localtime(value.timestamp_utc).strftime("%Y-%m-%d %H:%M:%S"),
-                "y": getattr(value, field) if getattr(value, field) != -1 else 0
-            } for value in data
-        ]
-
-    @property
-    def data(self):
-        data = self._format_for_chart_js(self.instance, self.chart_field)
-        response = {
-            'start_time': data[0]['t'] if data else [],
-            'end_time': data[-1]['t'] if data else [],
-            self.chart_field: data
-        }
-        return ReturnDict(response, serializer=self)
-
-
-class HeartRateDataListSerializer(BaseListSerializer):
+class HeartRateDataListSerializer(BaseChartJSListSerializer):
     chart_field = 'heart_rate'
 
 
@@ -50,29 +29,9 @@ class HeartRateDataSerializer(serializers.ModelSerializer):
         fields = ['timestamp_utc', 'heart_rate']
 
 
-class StressDataListSerializer(serializers.ListSerializer):
-    """
-    ChartJS format
-    [
-      {
-        t: "2019-10-26 07:01:00",
-        y: 60
-      },
-    ]
-    """
-
-    def _format_for_chart_js(self, data):
-        return [
-            {
-                "t": value.stress_level_time.strftime("%Y-%m-%d %H:%M:%S"),
-                "y": value.stress_level_value if value.stress_level_value != -1 else 0
-            } for value in data
-        ]
-
-    @property
-    def data(self):
-        data = self._format_for_chart_js(self.instance)
-        return ReturnList(data, serializer=self)
+class StressDataListSerializer(BaseChartJSListSerializer):
+    chart_field = 'stress_level_value'
+    time_field = 'stress_level_time_utc'
 
 
 class StressDataSerializer(serializers.Serializer):
