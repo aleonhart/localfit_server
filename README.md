@@ -11,15 +11,15 @@ python manage.py migrate
 ```bash
 python manage.py runserver
 ```
-# Stress Monitor Files
+# Monitor Files
 ## Upload a Single File
 ```python
 import requests
-r = requests.post('http://127.0.0.1:8000/monitor/gvamonitorupload/', data={"file": "testdata/monitor_testfile.csv"})
+requests.post('http://127.0.0.1:8000/monitor/upload/', data={'file': '/Users/YOU/Documents/garmindata/MONITOR/82AK4813.FIT'})
 ```
 ## Upload Files in Bulk
 ```bash
-for f in `ls ~/Documents/garmindata/CSV/MONITOR_STRESS/*.csv`;do echo "import requests; r = requests.post('http://127.0.0.1:8000/app/gvamonitorupload/', data={'file': '$f'}); print(r)"|python;done
+for f in `ls ~/Documents/garmindata/MONITOR/*.FIT`;do echo "import requests; r = requests.post('http://127.0.0.1:8000/monitor/upload/', data={'file': '$f'});print(r.json())"|python; echo $f;done
 ```
 
 # Viewing Data from Database
