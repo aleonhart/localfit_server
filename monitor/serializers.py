@@ -1,23 +1,19 @@
 # STDLIB
-import csv
 
 # 3rd Party
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from fitparse import FitFile
 
 from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.exceptions import ParseError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.utils.serializer_helpers import ReturnList, ReturnDict
 from rest_framework.exceptions import ValidationError
 import pytz
 
 # Internal
-from .models import MonitorStressFile, MonitorStressData, MonitorHeartRateData
-from localfitserver.utils import convert_ant_timestamp_to_unix_timestamp, bitswap_ant_timestamp_to_unix_timestamp
+from .models import MonitorFile, StressData, HeartRateData, RestingMetRateData
+from localfitserver.utils import bitswap_ant_timestamp_to_unix_timestamp
 
 
 class BaseListSerializer(serializers.ListSerializer):
@@ -49,7 +45,7 @@ class HeartRateDataListSerializer(BaseListSerializer):
 class HeartRateDataSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = MonitorHeartRateData
+        model = HeartRateData
         list_serializer_class = HeartRateDataListSerializer
         fields = ['timestamp_utc', 'heart_rate']
 
@@ -85,90 +81,78 @@ class StressDataSerializer(serializers.Serializer):
         list_serializer_class = StressDataListSerializer
 
 
-"""
-
-Monitor File
-- heart rate data
-Field 0 = Data
-Field 2 = monitoring
-
-Local Number
-0 => ?
-2 => START HERE. heart rate values.
-Field 3="timestamp_16"
-Field 4=timestamp
-Field 5=units "s"
-Field 6="heart_rate"
-Field 7=heart rate value
-Field 8=units "bpm"
-
-4=>
-Field 3=timestamp
-Field 4=
-Field 5=
-Field 6=
-Field 7=
-Field 8=
-
-4=>
-Field 3=cycles OR steps
-Field 4=value
-Field 5=units "cycles"
-Field 6="active_time"
-Field 7=value (bigger, 100s)
-Field 8=units "s"
-Field 9="active_calories"
-Field 10=value (10)
-Field 11=units "kcal"
-Field 12="timestamp_16"
-Field 13=value
-Field 14=units "s"
-Field 15="current_activity_type_intensity"
-Field 16=value (160)
-Field 17=units
-Field 18=activity_type
-Field 19=value (0 for cycles)
-Field 20=units
-Field 21="intensity"
-Field 22=value (1,2,3)
-Field 23=units
-
-5=>
-timestamp
-
-6=>
-more cycle/steps. rollups?
-
-7=> THEN HERE. activity and intensity levels
-Field 3="timestamp"
-Field 4=value
-Field 5=units "s"
-Field 6="current_activity_type_intensity"
-Field 7=value (hundreds)
-Field 8=units
-Field 9="activity_type"
-Field 10= 1 or 8 or none
-Field 11=units
-Field 12="intensity"
-Field 13=value
-Field 14=units
-
-
-"""
-
-
-class MonitorHeartRateFileUploadSerializer(serializers.Serializer):
+class MonitorFileUploadSerializer(serializers.Serializer):
     parser_class = (FileUploadParser,)
 
-    generic_fields = [
-        'heart_rate'
+    stress_fields = [
+        'stress_level_value'
     ]
+
+    stress_time_fields = [
+        'stress_level_time'
+    ]
+
     time_fields = [
         'timestamp'
     ]
+
     time_16_fields = [
         'timestamp_16'
     ]
+
+    def _get_stress_data(self, fit_file, monitor_file):
+        stress_obj = None
+        for row in fit_file.get_messages('stress_level'):
+            stress_data = {'file': monitor_file}
+            for col in row:
+                if col.name in self.stress_fields:
+                    stress_data[col.name] = col.value
+                if col.name in self.stress_time_fields:
+                    stress_data[f'{col.name}_utc'] = timezone.make_aware(col.value, timezone=pytz.UTC)
+
+            stress_obj = StressData(**stress_data)
+            stress_obj.save()
+
+        return stress_obj
+
+    def _get_heart_rate_data(self, fit_file, monitor_file):
+        heart_rate_obj = None
+        most_recent_timestamp_ant_epoch = None
+
+        # TODO distance (decimal m), steps, active_time (s), active_calories, duration_min, activity_type (int)
+        for row in fit_file.get_messages('monitoring'):
+            heart_rate_data = {'file': monitor_file}
+            for col in row:
+                if col.name == 'heart_rate':
+                    heart_rate_data[col.name] = col.value
+                if col.name in self.time_fields:
+                    heart_rate_data[f'{col.name}_utc'] = timezone.make_aware(col.value, timezone=pytz.UTC)
+                    most_recent_timestamp_ant_epoch = col.raw_value
+                if col.name in self.time_16_fields:
+                    timestamp = bitswap_ant_timestamp_to_unix_timestamp(most_recent_timestamp_ant_epoch, col.raw_value)
+                    heart_rate_data['timestamp_utc'] = timestamp
+
+            # throw out the rows without heart rate data
+            if heart_rate_data.get('heart_rate'):
+                heart_rate_obj = HeartRateData(**heart_rate_data)
+                heart_rate_obj.save()
+
+        return heart_rate_obj
+
+    def _get_resting_metabolic_rate_data(self, fit_file, monitor_file):
+        resting_metabolic_rate_obj = None
+        for row in fit_file.get_messages('monitoring_info'):
+            resting_metabolic_rate_data = {'file': monitor_file}
+            for col in row:
+                if col.name == 'resting_metabolic_rate':
+                    resting_metabolic_rate_data[col.name] = col.value
+                if col.name in self.time_fields:
+                    resting_metabolic_rate_data[f'{col.name}_utc'] = timezone.make_aware(col.value, timezone=pytz.UTC)
+
+            resting_metabolic_rate_obj = RestingMetRateData(**resting_metabolic_rate_data)
+            resting_metabolic_rate_obj.save()
+
+        return resting_metabolic_rate_obj
 
     def validate(self, attrs):
         if not self.initial_data.get('file'):
@@ -180,34 +164,17 @@ class MonitorHeartRateFileUploadSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data):
-        newfiledata = None
-        most_recent_timestamp_ant_epoch = None
+        # with transaction.atomic():
+        file = MonitorFile(filename=validated_data['filename'])
+        file.save()
 
-        with transaction.atomic():
-            file = MonitorStressFile(filename=validated_data['filename'])
-            file.save()
-
-            for row in validated_data['file'].get_messages('monitoring'):
-                data = {'file': file}
-                for col in row:
-                    if col.name in self.generic_fields:
-                        data[col.name] = col.value
-                    if col.name in self.time_fields:
-                        data[f'{col.name}_utc'] = timezone.make_aware(col.value, timezone=pytz.UTC)
-                        most_recent_timestamp_ant_epoch = col.raw_value
-                    if col.name in self.time_16_fields:
-                        timestamp = bitswap_ant_timestamp_to_unix_timestamp(most_recent_timestamp_ant_epoch, col.raw_value)
-                        data['timestamp_utc'] = timestamp
-
-                # throw out the rows without heart rate data
-                if data.get('heart_rate'):
-                    newfiledata = self.Meta.model(**data)
-                    newfiledata.save()
-
-        return newfiledata
+        stress = self._get_stress_data(validated_data['file'], file)
+        heart_rate = self._get_heart_rate_data(validated_data['file'], file)
+        resting_metabolic_rate = self._get_resting_metabolic_rate_data(validated_data['file'], file)
+        return resting_metabolic_rate
 
     def update(self, instance, validated_data):
         pass
 
     class Meta:
-        model = MonitorHeartRateData
+        model = RestingMetRateData

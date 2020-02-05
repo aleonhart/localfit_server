@@ -2,37 +2,40 @@
 from django.db import models
 
 
-class MonitorStressFile(models.Model):
+class MonitorFile(models.Model):
     """
-    Heart rate monitor files (MONITOR) - Stress Data
+    MONITOR files
     """
     filename = models.CharField(max_length=15, unique=True)
 
 
-class MonitorStressData(models.Model):
+class StressData(models.Model):
     """
-    Stress data from heart rate monitor files (MONITOR)
-
-    Field 0="Data"
-    Field 2="stress_level"
-    Field 3="stress_level_time"
-    Field 4=timestamp
-    Field 5=units "s"
-    Field 6="stress_level_value"
-    Field 7=value (0-100)
-    Field 8=units
-    Field 9="unknown"
-    Field 10=-100 to 150
+    Stress data from MONITOR files
     """
     monitor_stress_data_id = models.AutoField(primary_key=True)
-    file = models.ForeignKey(MonitorStressFile, on_delete=models.CASCADE)
-    stress_level_time = models.DateTimeField()  # Field 4
-    stress_level_value = models.IntegerField()  # Field 7
+    file = models.ForeignKey(MonitorFile, on_delete=models.CASCADE)
+    stress_level_time_utc = models.DateTimeField()
+    stress_level_value = models.IntegerField()
 
 
-class MonitorHeartRateData(models.Model):
+class HeartRateData(models.Model):
+    """
+    Heart rate data from MONITOR files
+    """
 
-    monitor_stress_data_id = models.AutoField(primary_key=True)
-    file = models.ForeignKey(MonitorStressFile, on_delete=models.CASCADE)
+    heart_rate_data_id = models.AutoField(primary_key=True)
+    file = models.ForeignKey(MonitorFile, on_delete=models.CASCADE)
     timestamp_utc = models.DateTimeField()
     heart_rate = models.IntegerField()
+
+
+class RestingMetRateData(models.Model):
+    """
+    Resting metabolic rate data from MONITOR files
+    """
+
+    resting_metabolic_rate_data_id = models.AutoField(primary_key=True)
+    file = models.ForeignKey(MonitorFile, on_delete=models.CASCADE)
+    timestamp_utc = models.DateTimeField()
+    resting_metabolic_rate = models.IntegerField()  # KCAL

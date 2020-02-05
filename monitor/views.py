@@ -10,17 +10,17 @@ from django.db import IntegrityError
 import pytz
 
 # Internal
-from .serializers import MonitorHeartRateFileUploadSerializer, StressDataSerializer, HeartRateDataSerializer
-from .models import MonitorStressData, MonitorHeartRateData
+from .serializers import MonitorFileUploadSerializer, StressDataSerializer, HeartRateDataSerializer
+from .models import StressData, HeartRateData
 from localfitserver import settings
 
 
 class HeartRateList(viewsets.GenericViewSet, mixins.ListModelMixin):
-    queryset = MonitorHeartRateData.objects.all()
+    queryset = HeartRateData.objects.all()
     serializer_class = HeartRateDataSerializer
 
     def get_queryset(self):
-        queryset = MonitorHeartRateData.objects.all()
+        queryset = HeartRateData.objects.all()
         start_date_str = self.request.query_params.get('start_date')
         end_date_str = self.request.query_params.get('end_date')
         if start_date_str:
@@ -42,11 +42,11 @@ class HeartRateList(viewsets.GenericViewSet, mixins.ListModelMixin):
 
 
 class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
-    queryset = MonitorStressData.objects.all()
+    queryset = StressData.objects.all()
     serializer_class = StressDataSerializer
 
     def get_queryset(self):
-        queryset = MonitorStressData.objects.all()
+        queryset = StressData.objects.all()
         start_date_str = self.request.query_params.get('start_date')
         end_date_str = self.request.query_params.get('end_date')
         if start_date_str:
@@ -67,17 +67,17 @@ class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
         return Response(serializer.data)
 
 
-class MonitorFileHeartRateUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
+class MonitorFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
 
-    queryset = MonitorHeartRateData.objects.all()
-    serializer_class = MonitorHeartRateFileUploadSerializer
+    queryset = HeartRateData.objects.all()
+    serializer_class = MonitorFileUploadSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
             self.perform_create(serializer)
-        except IntegrityError:
-            return Response(serializer.data, status=HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': e.args}, status=HTTP_400_BAD_REQUEST)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=HTTP_201_CREATED, headers=headers)
