@@ -2,8 +2,20 @@
 from rest_framework import serializers
 
 # Internal
-from .models import HeartRateData
+from .models import HeartRateData, RestingMetRateData
 from localfitserver.base_serializers import BaseChartJSListSerializer
+
+
+class RestingMetaRateListSerializer(BaseChartJSListSerializer):
+    chart_field = 'resting_metabolic_rate'
+
+
+class RestingMetaRateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RestingMetRateData
+        list_serializer_class = RestingMetaRateListSerializer
+        fields = ['timestamp_utc', 'resting_metabolic_rate']
 
 
 class HeartRateDataListSerializer(BaseChartJSListSerializer):
