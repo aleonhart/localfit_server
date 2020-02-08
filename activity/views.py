@@ -12,7 +12,8 @@ from .serializers import (ActivityMapDataSerializer, ActivityMetaDataSerializer,
                           ActivityHeartRateSerializer, ActivitiesSerializer, ActivitiesCalendarSerializer)
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
-                                 ActivityRunFileUploadSerializer, ActivityTreadmillFileUploadSerializer)
+                                 ActivityRunFileUploadSerializer, ActivityTreadmillFileUploadSerializer,
+                                 ActivityEllipticalFileUploadSerializer)
 from .models import ActivityData, ActivityFile
 
 
@@ -89,6 +90,7 @@ class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
     SPORT_TO_SERIALIZER = {
         (1, 0): ActivityRunFileUploadSerializer,              # Run: generic
         (1, 1): ActivityTreadmillFileUploadSerializer,        # Run: Treadmill
+        (4, 15): ActivityEllipticalFileUploadSerializer,      # Fitness Equipment: Elliptical
         (11, 0): ActivityWalkFileUploadSerializer,            # walk
         (10, 43): ActivityYogaFileUploadSerializer,           # yoga
         (4, 16): ActivityStairClimbingFileUploadSerializer,   # Fitness Equipment: Stair Climbing

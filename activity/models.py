@@ -20,6 +20,7 @@ class Session(models.Model):
     total_timer_time = models.DecimalField(null=True, max_digits=10, decimal_places=3)
     total_distance = models.DecimalField(null=True, max_digits=8, decimal_places=2)
     total_strides = models.IntegerField(null=True)
+    total_cycles = models.IntegerField(null=True)
     total_calories = models.IntegerField(null=True)
     enhanced_avg_speed = models.DecimalField(null=True, max_digits=5, decimal_places=3)
     avg_speed = models.IntegerField(null=True)

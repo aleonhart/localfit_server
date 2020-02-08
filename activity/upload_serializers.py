@@ -25,7 +25,38 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
         raise ValidationError("Child class must implement this method!")
 
     def _get_activity_session_data(self, fit_file):
-        raise ValidationError("Child class must implement this method!")
+        session_data = [row for row in fit_file.get_messages('session')][0]
+        formatted_session_data = {
+            'start_time_utc': make_aware(session_data.get('start_time').value, timezone=pytz.UTC),
+            'total_elapsed_time': session_data.get('total_elapsed_time').value,
+            'total_timer_time': session_data.get('total_timer_time').value,
+            'total_distance': session_data.get('total_distance').value,
+            'total_strides': session_data.get('total_strides').value if session_data.get('total_strides') else None,
+            'total_cycles': session_data.get('total_cycles').value if session_data.get('total_cycles') else None,
+            'total_calories': session_data.get('total_calories').value,
+            'enhanced_avg_speed': session_data.get('enhanced_avg_speed').value,
+            'avg_speed': session_data.get('avg_speed').value,
+            'enhanced_max_speed': session_data.get('enhanced_max_speed').value,
+            'max_speed': session_data.get('max_speed').value,
+            'avg_power': session_data.get('avg_power').value,
+            'max_power': session_data.get('max_power').value,
+            'total_ascent': session_data.get('total_ascent').value,
+            'total_descent': session_data.get('total_descent').value,
+        }
+
+        # GPS data only present when GPS is enabled and relevant to the activity
+        if session_data.get('start_position_lat').value and session_data.get('start_position_long').value:
+            start_position_lat_deg = convert_semicircles_to_degrees(session_data.get('start_position_lat').value)
+            start_position_long_deg = convert_semicircles_to_degrees(session_data.get('start_position_long').value)
+            formatted_session_data.update({
+                'start_position_lat_sem': session_data.get('start_position_lat').value,
+                'start_position_long_sem': session_data.get('start_position_long').value,
+                'start_position_lat_deg': start_position_lat_deg,
+                'start_position_long_deg': start_position_long_deg,
+                'start_location': convert_lat_long_to_location_name(start_position_lat_deg, start_position_long_deg),
+            })
+
+        return formatted_session_data
 
     def validate(self, attrs):
         fit_file = FitFile(self.initial_data['file'])
@@ -95,32 +126,6 @@ class ActivityWalkFileUploadSerializer(BaseActivityFileUploadSerializer):
         file.save()
         return file
 
-    def _get_activity_session_data(self, fit_file):
-        session_data = [row for row in fit_file.get_messages('session')][0]
-        start_position_lat_deg = convert_semicircles_to_degrees(session_data.get('start_position_lat').value)
-        start_position_long_deg = convert_semicircles_to_degrees(session_data.get('start_position_long').value)
-        return {
-            'start_time_utc': make_aware(session_data.get('start_time').value, timezone=pytz.UTC),
-            'start_position_lat_sem': session_data.get('start_position_lat').value,
-            'start_position_long_sem': session_data.get('start_position_long').value,
-            'start_position_lat_deg': start_position_lat_deg,
-            'start_position_long_deg': start_position_long_deg,
-            'start_location': convert_lat_long_to_location_name(start_position_lat_deg, start_position_long_deg),
-            'total_elapsed_time': session_data.get('total_elapsed_time').value,
-            'total_timer_time': session_data.get('total_timer_time').value,
-            'total_distance': session_data.get('total_distance').value,
-            'total_strides': session_data.get('total_strides').value,
-            'total_calories': session_data.get('total_calories').value,
-            'enhanced_avg_speed': session_data.get('enhanced_avg_speed').value,
-            'avg_speed': session_data.get('avg_speed').value,
-            'enhanced_max_speed': session_data.get('enhanced_max_speed').value,
-            'max_speed': session_data.get('max_speed').value,
-            'avg_power': session_data.get('avg_power').value,
-            'max_power': session_data.get('max_power').value,
-            'total_ascent': session_data.get('total_ascent').value,
-            'total_descent': session_data.get('total_descent').value,
-        }
-
     class Meta:
         model = ActivityData
 
@@ -146,24 +151,19 @@ class ActivityTreadmillFileUploadSerializer(ActivityWalkFileUploadSerializer):
         file.save()
         return file
 
-    def _get_activity_session_data(self, fit_file):
-        session_data = [row for row in fit_file.get_messages('session')][0]
-        return {
-            'start_time_utc': make_aware(session_data.get('start_time').value, timezone=pytz.UTC),
-            'total_elapsed_time': session_data.get('total_elapsed_time').value,
-            'total_timer_time': session_data.get('total_timer_time').value,
-            'total_distance': session_data.get('total_distance').value,
-            'total_strides': session_data.get('total_strides').value,
-            'total_calories': session_data.get('total_calories').value,
-            'enhanced_avg_speed': session_data.get('enhanced_avg_speed').value,
-            'avg_speed': session_data.get('avg_speed').value,
-            'enhanced_max_speed': session_data.get('enhanced_max_speed').value,
-            'max_speed': session_data.get('max_speed').value,
-            'avg_power': session_data.get('avg_power').value,
-            'max_power': session_data.get('max_power').value,
-            'total_ascent': session_data.get('total_ascent').value,
-            'total_descent': session_data.get('total_descent').value,
-        }
+    class Meta:
+        model = ActivityData
+
+
+class ActivityEllipticalFileUploadSerializer(ActivityWalkFileUploadSerializer):
+
+    def _save_activity_file(self, filename, start_time_utc):
+        file = ActivityFile(filename=filename,
+                            start_time_utc=start_time_utc,
+                            activity_type='elliptical',
+                            activity_category='static')
+        file.save()
+        return file
 
     class Meta:
         model = ActivityData
@@ -184,17 +184,6 @@ class ActivityYogaFileUploadSerializer(BaseActivityFileUploadSerializer):
                             activity_category='static')
         file.save()
         return file
-
-    def _get_activity_session_data(self, fit_file):
-        session_data = [row for row in fit_file.get_messages('session')][0]
-        return {
-            'start_time_utc': make_aware(session_data.get('start_time').value, timezone=pytz.UTC),
-            'total_elapsed_time': session_data.get('total_elapsed_time').value,
-            'total_timer_time': session_data.get('total_timer_time').value,
-            'total_calories': session_data.get('total_calories').value,
-            'avg_heart_rate': session_data.get('avg_heart_rate').value,
-            'max_heart_rate': session_data.get('max_heart_rate').value,
-        }
 
     class Meta:
         model = ActivityData
