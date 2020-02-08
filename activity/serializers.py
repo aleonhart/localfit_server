@@ -8,7 +8,8 @@ from .models import ActivityFile, Session, ActivityData
 from localfitserver.utils import (
     format_timespan_for_display,
     format_distance_for_display,
-    format_date_for_display)
+    format_date_for_display,
+    format_date_for_calendar_heat_map)
 from localfitserver.base_serializers import BaseChartJSListSerializer
 
 
@@ -143,3 +144,23 @@ class ActivitiesSerializer(serializers.ModelSerializer):
         list_serializer_class = ActivitiesListSerializer
         fields = ['filename', 'activity_type', 'activity_category', 'start_time_utc', 'session']
 
+
+class ActivitiesCalendarListSerializer(serializers.ListSerializer):
+
+    @property
+    def data(self):
+        files = super(ActivitiesCalendarListSerializer, self).data
+        return ReturnList(files, serializer=self)
+
+
+class ActivitiesCalendarSerializer(serializers.ModelSerializer):
+
+    def to_representation(self, instance):
+        ret = super(ActivitiesCalendarSerializer, self).to_representation(instance)
+        ret['start_time_utc'] = format_date_for_calendar_heat_map(instance.start_time_utc)
+        return ret
+
+    class Meta:
+        model = ActivityFile
+        list_serializer_class = ActivitiesCalendarListSerializer
+        fields = ['activity_type', 'start_time_utc']

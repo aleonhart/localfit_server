@@ -12,6 +12,7 @@ router.register(r'upload', views.ActivityFileUpload)
 urlpatterns = [
     path('', include(router.urls)),
     path('meta/', views.activities),
+    path('calendar/', views.activities_calendar),
     path('meta/<filename>/', views.activity),
     path('map/<filename>/', views.activity_map),
     path('altitude/<filename>/', views.activity_altitude),

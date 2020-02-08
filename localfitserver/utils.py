@@ -102,6 +102,14 @@ def format_distance_for_display(meters, decimals=2):
     return round(Decimal(meters * Decimal(0.000621371192)), decimals)
 
 
+def format_date_for_calendar_heat_map(datetime_obj):
+    """
+    Format: YYYY-MM-DD
+    This is the format expected by https://github.com/kevinsqi/react-calendar-heatmap
+    """
+    return datetime_obj.strftime("%Y-%m-%d")
+
+
 def format_date_for_display(date):
     """
     Format:

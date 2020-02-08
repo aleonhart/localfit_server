@@ -8,7 +8,8 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from fitparse import FitFile
 
 # Internal
-from .serializers import ActivityMapDataSerializer, ActivityMetaDataSerializer, ActivityAltitudeSerializer, ActivityHeartRateSerializer, ActivitiesSerializer
+from .serializers import (ActivityMapDataSerializer, ActivityMetaDataSerializer, ActivityAltitudeSerializer,
+                          ActivityHeartRateSerializer, ActivitiesSerializer, ActivitiesCalendarSerializer)
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer, ActivityTreadmillFileUploadSerializer)
@@ -64,6 +65,15 @@ def activities(request):
     except ActivityFile.DoesNotExist:
         return HttpResponse(status=404)
 
+
+@api_view(['GET'])
+def activities_calendar(request):
+    try:
+        data = ActivityFile.objects.all().order_by('-start_time_utc')
+        serializer = ActivitiesCalendarSerializer(data, many=True)
+        return Response(serializer.data)
+    except ActivityFile.DoesNotExist:
+        return HttpResponse(status=404)
 
 
 class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
