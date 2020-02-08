@@ -157,7 +157,7 @@ class ActivitiesCalendarSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super(ActivitiesCalendarSerializer, self).to_representation(instance)
-        ret['start_time_utc'] = format_date_for_calendar_heat_map(instance.start_time_utc)
+        ret['date'] = format_date_for_calendar_heat_map(instance.start_time_utc)
         return ret
 
     class Meta:
