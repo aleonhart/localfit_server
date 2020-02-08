@@ -13,7 +13,10 @@ from .models import TotalsFile
 
 @api_view(['GET'])
 def totals(request):
-    data = TotalsFile.objects.get(sport='running')
+    try:
+        data = TotalsFile.objects.get(sport='running')
+    except TotalsFile.DoesNotExist:
+        return HttpResponse(status=404)
     serializer = TotalsSerializer(data)
     return Response(serializer.data)
 
