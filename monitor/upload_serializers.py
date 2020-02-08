@@ -1,5 +1,5 @@
 # 3rd Party
-from fitparse import FitFile
+from fitparse import FitFile, FitParseError
 
 from django.utils import timezone
 from rest_framework import serializers
@@ -85,6 +85,16 @@ class MonitorFileUploadSerializer(serializers.Serializer):
 
         return resting_metabolic_rate_obj
 
+    def _get_step_data(self, fit_file, monitor_file):
+        step_obj = None
+        step_data = {'file': monitor_file}
+        for row in fit_file.get_messages('monitoring'):
+            for col in row:
+                if col.name in ['steps', 'active_calories']:
+                    step_data[col.name] = col.value
+
+        return step_obj
+
     def validate(self, attrs):
         if not self.initial_data.get('file'):
             raise ValidationError({"file": "File must be provided"})
@@ -99,6 +109,7 @@ class MonitorFileUploadSerializer(serializers.Serializer):
         file = MonitorFile(filename=validated_data['filename'])
         file.save()
 
+        step = self._get_step_data(validated_data['file'], file)
         stress = self._get_stress_data(validated_data['file'], file)
         heart_rate = self._get_heart_rate_data(validated_data['file'], file)
         resting_metabolic_rate = self._get_resting_metabolic_rate_data(validated_data['file'], file)
