@@ -136,6 +136,39 @@ class ActivityRunFileUploadSerializer(ActivityWalkFileUploadSerializer):
         return file
 
 
+class ActivityTreadmillFileUploadSerializer(ActivityWalkFileUploadSerializer):
+
+    def _save_activity_file(self, filename, start_time_utc):
+        file = ActivityFile(filename=filename,
+                            start_time_utc=start_time_utc,
+                            activity_type='treadmill',
+                            activity_category='static')
+        file.save()
+        return file
+
+    def _get_activity_session_data(self, fit_file):
+        session_data = [row for row in fit_file.get_messages('session')][0]
+        return {
+            'start_time_utc': make_aware(session_data.get('start_time').value, timezone=pytz.UTC),
+            'total_elapsed_time': session_data.get('total_elapsed_time').value,
+            'total_timer_time': session_data.get('total_timer_time').value,
+            'total_distance': session_data.get('total_distance').value,
+            'total_strides': session_data.get('total_strides').value,
+            'total_calories': session_data.get('total_calories').value,
+            'enhanced_avg_speed': session_data.get('enhanced_avg_speed').value,
+            'avg_speed': session_data.get('avg_speed').value,
+            'enhanced_max_speed': session_data.get('enhanced_max_speed').value,
+            'max_speed': session_data.get('max_speed').value,
+            'avg_power': session_data.get('avg_power').value,
+            'max_power': session_data.get('max_power').value,
+            'total_ascent': session_data.get('total_ascent').value,
+            'total_descent': session_data.get('total_descent').value,
+        }
+
+    class Meta:
+        model = ActivityData
+
+
 class ActivityYogaFileUploadSerializer(BaseActivityFileUploadSerializer):
     generic_fields = [
         'heart_rate',

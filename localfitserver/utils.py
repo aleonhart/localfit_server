@@ -72,6 +72,7 @@ def convert_semicircles_to_degrees(semicircles):
 
 def convert_lat_long_to_location_name(lat, long):
     if lat and long:
+        # TODO call to geolocator can fail and should be made async
         geolocator = Nominatim(user_agent="localfit")
         address = geolocator.reverse(f"{round(lat, 6)}, {round(long, 6)}").raw['address']
         small_location = address.get('path') or address.get('footway') or address.get('road') or address.get('street')
