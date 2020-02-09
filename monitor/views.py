@@ -79,11 +79,6 @@ class StressList(viewsets.GenericViewSet, mixins.ListModelMixin):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        page = self.paginate_queryset(self.get_queryset())
-        if page:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
         serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response(serializer.data)
 
