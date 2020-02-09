@@ -70,6 +70,27 @@ def convert_semicircles_to_degrees(semicircles):
     return round(semicircles * (180/(2**31)), 6)
 
 
+def calculate_geographic_midpoint(list_of_coordinates):
+        """
+        Calculating a real geographic midpoint is complicated, but for
+        distances as small as I will realistically be traveling by foot,
+        it is reasonable to simplify and assume the shape the path forms is
+        a 2D plane, which makes taking the average "good enough".
+
+        Expected Parameter Format
+        [{'lat': Decimal('00.000000'), 'lng': Decimal('000.000000')}]
+        """
+        lat = []
+        long = []
+        for coordinates in list_of_coordinates:
+            lat.append(coordinates['lat'])
+            long.append(coordinates['lng'])
+
+        midpoint_lat_deg = sum(lat) / len(lat)
+        midpoint_long_deg = sum(long) / len(long)
+        return round(midpoint_lat_deg, 6), round(midpoint_long_deg, 6)
+
+
 def convert_lat_long_to_location_name(lat, long):
     if lat and long:
         # TODO call to geolocator can fail and should be made async

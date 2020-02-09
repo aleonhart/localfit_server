@@ -12,7 +12,8 @@ from localfitserver.utils import (
     format_timespan_for_display,
     format_distance_for_display,
     format_date_for_display,
-    format_date_for_calendar_heat_map)
+    format_date_for_calendar_heat_map,
+    calculate_geographic_midpoint)
 from localfitserver.base_serializers import BaseChartJSListSerializer
 
 
@@ -106,6 +107,7 @@ class ActivityMapDataSerializer(serializers.ModelSerializer):
         session_data = ret.pop('session')[0]
         ret.update(**session_data)
         ret['activitydata'] = list(filter((None).__ne__, ret['activitydata']))
+        ret['midpoint_lat_deg'], ret['midpoint_long_deg'] = calculate_geographic_midpoint(ret['activitydata'])
         return ReturnDict(ret, serializer=self)
 
     class Meta:
