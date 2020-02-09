@@ -1,3 +1,6 @@
+# stdlib
+from datetime import datetime, timedelta
+
 # 3rd Party
 from django.utils import timezone
 from rest_framework import serializers
@@ -149,8 +152,16 @@ class ActivitiesCalendarListSerializer(serializers.ListSerializer):
 
     @property
     def data(self):
-        files = super(ActivitiesCalendarListSerializer, self).data
-        return ReturnList(files, serializer=self)
+        activities = super(ActivitiesCalendarListSerializer, self).data
+        year = self._kwargs['context']['request'].query_params['year']
+        response = {
+            'start_date': f"{year}-01-01",
+            'end_date': (datetime.strptime(year, "%Y") + timedelta(days=364)).strftime("%Y-%m-%d"),
+            'last_year': (datetime.strptime(year, "%Y") + timedelta(days=-365)).strftime("%Y"),
+            'next_year': (datetime.strptime(year, "%Y") + timedelta(days=365)).strftime("%Y"),
+            'activities': activities,
+        }
+        return ReturnDict(response, serializer=self)
 
 
 class ActivitiesCalendarSerializer(serializers.ModelSerializer):

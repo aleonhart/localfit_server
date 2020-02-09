@@ -1,11 +1,16 @@
+# stdlib
+from datetime import datetime, timedelta
+
 # 3rd Party
 from django.http import HttpResponse
+from django.utils import timezone
+from fitparse import FitFile
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
-from fitparse import FitFile
+import pytz
 
 # Internal
 from .serializers import (ActivityMapDataSerializer, ActivityMetaDataSerializer, ActivityAltitudeSerializer,
@@ -15,6 +20,7 @@ from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaF
                                  ActivityRunFileUploadSerializer, ActivityTreadmillFileUploadSerializer,
                                  ActivityEllipticalFileUploadSerializer)
 from .models import ActivityData, ActivityFile
+from localfitserver import settings
 
 
 @api_view(['GET'])
@@ -67,14 +73,22 @@ def activities(request):
         return HttpResponse(status=404)
 
 
-@api_view(['GET'])
-def activities_calendar(request):
-    try:
-        data = ActivityFile.objects.all().order_by('-start_time_utc')
-        serializer = ActivitiesCalendarSerializer(data, many=True)
+class ActivitiesCalendarList(viewsets.GenericViewSet, mixins.ListModelMixin):
+    queryset = ActivityFile.objects.all()
+    serializer_class = ActivitiesCalendarSerializer
+
+    def get_queryset(self):
+        year_str = self.request.query_params['year']
+        start_date_dt = timezone.make_aware(datetime.strptime(f'{year_str}-01-01', "%Y-%m-%d"),
+                                         timezone=pytz.timezone(settings.TIME_ZONE))
+        end_date_dt = start_date_dt + timedelta(days=365)
+        return ActivityFile.objects.filter(start_time_utc__gte=start_date_dt, start_time_utc__lt=end_date_dt)
+
+    def list(self, request, *args, **kwargs):
+        if not request.query_params.get('year'):
+            raise ValidationError({'error': 'Please provide a year'})
+        serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response(serializer.data)
-    except ActivityFile.DoesNotExist:
-        return HttpResponse(status=404)
 
 
 class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
