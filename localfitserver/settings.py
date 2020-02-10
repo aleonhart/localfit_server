@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'activity',
     'totals',
     'records',
+    'manual',
 ]
 
 MIDDLEWARE = [

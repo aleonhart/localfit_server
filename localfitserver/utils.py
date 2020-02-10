@@ -160,3 +160,30 @@ def format_data_for_google_maps_api(lat_degrees, long_degrees):
     { lat: 41.365286, lng: -124.018488 }
     """
     return {'lat': lat_degrees, 'lng': long_degrees} if lat_degrees and long_degrees else None
+
+
+def get_vo2_max_range(vo2_max):
+    """
+    For women age 30-39 (me)
+
+    Superior    47.4
+    Excellent   42.4
+    Good        37.8
+    Fair        34.4
+    Poor       <34.4
+
+    https://www8.garmin.com/manuals/webhelp/fenix3/EN-US/GUID-1FBCCD9E-19E1-4E4C-BD60-1793B5B97EB3.html
+    """
+
+    if vo2_max < 34.4:
+        range = "Poor"
+    elif 34.4 <= vo2_max < 37.8:
+        range = "Fair"
+    elif 37.8 <= vo2_max < 42.4:
+        range = "Good"
+    elif 42.4 <= vo2_max < 47.4:
+        range = "Excellent"
+    elif 47.4 <= vo2_max:
+        range = "Superior"
+
+    return range
