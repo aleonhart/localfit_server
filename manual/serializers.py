@@ -14,7 +14,7 @@ class Vo2MaxSerializer(serializers.ModelSerializer):
     @property
     def data(self):
         ret = super().data
-        ret['vo2_range'] = get_vo2_max_range(ret['vo2_max'])
+        ret['vo2_range'], ret['vo2_percent'] = get_vo2_max_range(ret['vo2_max'])
         return ReturnDict(ret, serializer=self)
 
     class Meta:
