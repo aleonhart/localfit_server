@@ -12,6 +12,7 @@ Examples in this documentation use the [python requests](https://requests.readth
 A special shout out to [python-fitparse](https://github.com/dtcooper/python-fitparse), a handy way to handle 
 FIT data in Python.
 
+# Local Development
 ## Initial Project Setup
 Install the dependencies
 ```bash
