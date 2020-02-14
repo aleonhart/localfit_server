@@ -173,6 +173,8 @@ def get_vo2_max_range(vo2_max):
     Poor       <34.4
 
     https://www8.garmin.com/manuals/webhelp/fenix3/EN-US/GUID-1FBCCD9E-19E1-4E4C-BD60-1793B5B97EB3.html
+
+    Data formatted for react-gauge-chart
     """
 
     if vo2_max < 34.4:
