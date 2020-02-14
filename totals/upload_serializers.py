@@ -11,7 +11,10 @@ from .models import TotalsFile
 class ActivityTotalsFileUploadSerializer(serializers.Serializer):
 
     def validate(self, attrs):
-        fit_file = FitFile(self.initial_data['file'])
+        try:
+            fit_file = FitFile(self.initial_data['file'])
+        except FileNotFoundError:
+            raise ValidationError({"file": "File does not exist"})
         attrs['file'] = fit_file
         return attrs
 

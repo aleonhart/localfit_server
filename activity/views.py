@@ -9,7 +9,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 import pytz
 
 # Internal
@@ -46,11 +46,16 @@ def activity_altitude(request, filename):
 @api_view(['GET'])
 def activity_map(request, filename):
     try:
-        data = ActivityFile.objects.get(filename=filename)
-        serializer = ActivityMapDataSerializer(data)
-        return Response(serializer.data)
+        file = ActivityFile.objects.get(filename=filename)
     except ActivityFile.DoesNotExist:
-        return HttpResponse(status=404)
+        return HttpResponse(status=HTTP_404_NOT_FOUND)
+
+    # not all files have GPS data
+    if set(ActivityData.objects.filter(file=file).values_list('position_lat_sem', flat=True)) == {None}:
+        return HttpResponse(status=HTTP_404_NOT_FOUND)
+
+    serializer = ActivityMapDataSerializer(file)
+    return Response(serializer.data)
 
 
 @api_view(['GET'])

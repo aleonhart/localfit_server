@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 
 # 3rd Party
-from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 

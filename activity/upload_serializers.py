@@ -59,7 +59,11 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
         return formatted_session_data
 
     def validate(self, attrs):
-        fit_file = FitFile(self.initial_data['file'])
+        try:
+            fit_file = FitFile(self.initial_data['file'])
+        except FileNotFoundError:
+            raise ValidationError({"file": "File does not exist"})
+
         attrs['file'] = fit_file
         attrs['filename'] = self.initial_data['file'].split("/")[-1].split(".")[0]
         attrs['session_data'] = self._get_activity_session_data(fit_file)

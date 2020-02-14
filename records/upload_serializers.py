@@ -11,14 +11,17 @@ from .models import RecordsFile
 class RecordsFileUploadSerializer(serializers.Serializer):
 
     def validate(self, attrs):
-        fit_file = FitFile(self.initial_data['file'])
+        try:
+            fit_file = FitFile(self.initial_data['file'])
+        except FileNotFoundError:
+            raise ValidationError({"file": "File does not exist"})
         attrs['file'] = fit_file
         return attrs
 
     def create(self, validated_data):
         total_file = None
         with transaction.atomic():
-            for total in validated_data['file'].get_messages('totals'):
+            for total in validated_data['file'].get_messages('records'):
                 try:
                     rowdict = {
                         t.name: t.value for t in total.fields

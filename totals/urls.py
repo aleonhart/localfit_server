@@ -12,5 +12,4 @@ router.register(r'upload', views.TotalsFileUpload)
 urlpatterns = [
     path('', include(router.urls)),
     path('meta/', views.totals),
-
 ]
