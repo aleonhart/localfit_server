@@ -126,7 +126,7 @@ class ActivityWalkFileUploadSerializer(BaseActivityFileUploadSerializer):
         file = ActivityFile(filename=filename,
                             start_time_utc=start_time_utc,
                             activity_type='walk',
-                            activity_category='mobile')
+                            activity_category='recorded')
         file.save()
         return file
 
@@ -140,7 +140,7 @@ class ActivityRunFileUploadSerializer(ActivityWalkFileUploadSerializer):
         file = ActivityFile(filename=filename,
                             start_time_utc=start_time_utc,
                             activity_type='run',
-                            activity_category='mobile')
+                            activity_category='recorded')
         file.save()
         return file
 
@@ -151,7 +151,7 @@ class ActivityTreadmillFileUploadSerializer(ActivityWalkFileUploadSerializer):
         file = ActivityFile(filename=filename,
                             start_time_utc=start_time_utc,
                             activity_type='treadmill',
-                            activity_category='static')
+                            activity_category='recorded')
         file.save()
         return file
 
@@ -165,7 +165,7 @@ class ActivityEllipticalFileUploadSerializer(ActivityWalkFileUploadSerializer):
         file = ActivityFile(filename=filename,
                             start_time_utc=start_time_utc,
                             activity_type='elliptical',
-                            activity_category='static')
+                            activity_category='recorded')
         file.save()
         return file
 
@@ -185,7 +185,7 @@ class ActivityYogaFileUploadSerializer(BaseActivityFileUploadSerializer):
         file = ActivityFile(filename=filename,
                             start_time_utc=start_time_utc,
                             activity_type='yoga',
-                            activity_category='static')
+                            activity_category='recorded')
         file.save()
         return file
 
@@ -198,7 +198,7 @@ class ActivityStairClimbingFileUploadSerializer(ActivityYogaFileUploadSerializer
         file = ActivityFile(filename=filename,
                             start_time_utc=start_time_utc,
                             activity_type='stairmaster',
-                            activity_category='mobile')
+                            activity_category='recorded')
         file.save()
         return file
 
@@ -208,6 +208,6 @@ class ActivityCardioFileUploadSerializer(ActivityYogaFileUploadSerializer):
         file = ActivityFile(filename=filename,
                             start_time_utc=start_time_utc,
                             activity_type='beat_saber',
-                            activity_category='static')
+                            activity_category='recorded')
         file.save()
         return file
