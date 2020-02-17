@@ -71,7 +71,15 @@ def activity(request, filename):
 @api_view(['GET'])
 def activities(request):
     try:
-        data = ActivityFile.objects.all().order_by('-start_time_utc')
+        year_str = request.query_params.get('year')
+        if not year_str:
+            raise ValidationError({'error': 'Please provide a year'})
+
+        start_date_dt = timezone.make_aware(datetime.strptime(f'{year_str}-01-01', "%Y-%m-%d"),
+                                            timezone=pytz.timezone(settings.TIME_ZONE))
+        end_date_dt = start_date_dt + timedelta(days=366)
+        data = ActivityFile.objects.filter(start_time_utc__gte=start_date_dt,
+                                           start_time_utc__lt=end_date_dt).order_by('-start_time_utc')
         serializer = ActivitiesSerializer(data, many=True)
         return Response(serializer.data)
     except ActivityFile.DoesNotExist:
