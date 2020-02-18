@@ -125,15 +125,7 @@ class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
     }
 
     def _get_serializer_by_sport(self, kwargs):
-        file_path = kwargs.get('file')
-        if not file_path:
-            raise ValidationError({"file": "Please provide a file path"})
-
-        try:
-            fit_file = FitFile(file_path)
-        except FileNotFoundError:
-            raise ValidationError({"file": "File does not exist"})
-        sport_data = [r for r in fit_file.get_messages('sport') if r.type == 'data'][0]
+        sport_data = [r for r in kwargs['fit_file'].get_messages('sport') if r.type == 'data'][0]
         try:
             serializer = self.SPORT_TO_SERIALIZER[(sport_data.get("sport").raw_value, sport_data.get("sub_sport").raw_value)]
         except KeyError:
@@ -146,6 +138,15 @@ class ActivityFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
         return serializer_class(*args, **kwargs)
 
     def create(self, request, *args, **kwargs):
+        if not request.FILES.get('file'):
+            raise ValidationError({"file": "Please provide a file"})
+
+        try:
+            fit_file = FitFile(request.FILES['file'])
+        except FileNotFoundError:
+            raise ValidationError({"file": "File does not exist"})
+
+        request.data['fit_file'] = fit_file
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:

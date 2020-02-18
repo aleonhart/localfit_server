@@ -4,7 +4,6 @@ from django.utils.timezone import make_aware
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FileUploadParser
-from fitparse import FitFile
 import pytz
 
 # Internal
@@ -59,14 +58,9 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
         return formatted_session_data
 
     def validate(self, attrs):
-        try:
-            fit_file = FitFile(self.initial_data['file'])
-        except FileNotFoundError:
-            raise ValidationError({"file": "File does not exist"})
-
-        attrs['file'] = fit_file
-        attrs['filename'] = self.initial_data['file'].split("/")[-1].split(".")[0]
-        attrs['session_data'] = self._get_activity_session_data(fit_file)
+        attrs['fit_file'] = self.initial_data['fit_file']
+        attrs['filename'] = self.initial_data['file'].name.split(".")[0]
+        attrs['session_data'] = self._get_activity_session_data(self.initial_data['fit_file'])
         return attrs
 
     def create(self, validated_data):
@@ -83,7 +77,7 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
             except Exception as e:
                 raise ValidationError("Failed to save file session data")
 
-            for record in validated_data['file'].get_messages('record'):
+            for record in validated_data['fit_file'].get_messages('record'):
                 rowdict = {'file': file}
                 for record_data in record:
                     if record_data.name in self.generic_fields:
