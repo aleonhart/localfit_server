@@ -1,9 +1,10 @@
 # 3rd Party
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.utils.timezone import make_aware
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.parsers import FileUploadParser
+from rest_framework.status import HTTP_400_BAD_REQUEST
 import pytz
 
 # Internal
@@ -57,25 +58,28 @@ class BaseActivityFileUploadSerializer(serializers.Serializer):
 
         return formatted_session_data
 
+    def _validate_filename(self, filename):
+        if ActivityFile.objects.filter(filename=filename).exists():
+            raise ValidationError(detail={"file": "This file has already been uploaded."}, code=HTTP_400_BAD_REQUEST)
+
     def validate(self, attrs):
         attrs['fit_file'] = self.initial_data['fit_file']
         attrs['filename'] = self.initial_data['file'].name.split(".")[0]
+        self._validate_filename(attrs['filename'])
+
         attrs['session_data'] = self._get_activity_session_data(self.initial_data['fit_file'])
         return attrs
 
     def create(self, validated_data):
         newfiledata = None
         with transaction.atomic():
-            try:
-                file = self._save_activity_file(validated_data['filename'], validated_data['session_data']['start_time_utc'])
-            except Exception as e:
-                raise ValidationError(e)
+            file = self._save_activity_file(validated_data['filename'], validated_data['session_data']['start_time_utc'])
 
             try:
                 session = Session(file=file, **validated_data['session_data'])
                 session.save()
             except Exception as e:
-                raise ValidationError("Failed to save file session data")
+                raise ValidationError(detail={"file": "Failed to save file session data"}, code=HTTP_400_BAD_REQUEST)
 
             for record in validated_data['fit_file'].get_messages('record'):
                 rowdict = {'file': file}
