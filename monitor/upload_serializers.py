@@ -1,6 +1,9 @@
+# stdlib
+from datetime import timedelta
+
 # 3rd Party
 from fitparse import FitFile, FitParseError
-
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.parsers import FileUploadParser
@@ -8,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 import pytz
 
 # Internal
-from .models import MonitorFile, StressData, HeartRateData, RestingMetRateData
+from .models import MonitorFile, StressData, HeartRateData, RestingMetRateData, StepData
 from localfitserver.utils import bitswap_ant_timestamp_to_unix_timestamp
 
 
@@ -86,13 +89,17 @@ class MonitorFileUploadSerializer(serializers.Serializer):
         return resting_metabolic_rate_obj
 
     def _get_step_data(self, fit_file, monitor_file):
-        step_obj = None
         step_data = {'file': monitor_file}
         for row in fit_file.get_messages('monitoring'):
             for col in row:
-                if col.name in ['steps', 'active_calories']:
+                if col.name in self.time_fields:
+                    if not step_data.get('date'):
+                        step_data['date'] = col.value.date()
+                if col.name in ['steps']:
                     step_data[col.name] = col.value
 
+        step_obj = StepData(**step_data)
+        step_obj.save()
         return step_obj
 
     def validate(self, attrs):
@@ -109,14 +116,14 @@ class MonitorFileUploadSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data):
-        # with transaction.atomic():
-        file = MonitorFile(filename=validated_data['filename'])
-        file.save()
+        with transaction.atomic():
+            file = MonitorFile(filename=validated_data['filename'])
+            file.save()
 
-        step = self._get_step_data(validated_data['file'], file)
-        stress = self._get_stress_data(validated_data['file'], file)
-        heart_rate = self._get_heart_rate_data(validated_data['file'], file)
-        resting_metabolic_rate = self._get_resting_metabolic_rate_data(validated_data['file'], file)
+            step = self._get_step_data(validated_data['file'], file)
+            stress = self._get_stress_data(validated_data['file'], file)
+            heart_rate = self._get_heart_rate_data(validated_data['file'], file)
+            resting_metabolic_rate = self._get_resting_metabolic_rate_data(validated_data['file'], file)
         return resting_metabolic_rate
 
     def update(self, instance, validated_data):
