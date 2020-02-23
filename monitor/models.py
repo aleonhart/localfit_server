@@ -39,3 +39,14 @@ class RestingMetRateData(models.Model):
     file = models.ForeignKey(MonitorFile, on_delete=models.CASCADE)
     timestamp_utc = models.DateTimeField()
     resting_metabolic_rate = models.IntegerField()  # KCAL
+
+
+class StepData(models.Model):
+    """
+    Daily step data from MONITOR files
+    """
+
+    step_data_id = models.AutoField(primary_key=True)
+    file = models.ForeignKey(MonitorFile, on_delete=models.CASCADE)
+    date = models.DateField()
+    steps = models.IntegerField()
