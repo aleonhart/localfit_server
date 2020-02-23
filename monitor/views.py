@@ -10,7 +10,7 @@ import pytz
 
 # Internal
 from .upload_serializers import MonitorFileUploadSerializer
-from .serializers import StressDataSerializer, HeartRateDataSerializer, RestingMetaRateSerializer
+from .serializers import StressDataSerializer, HeartRateDataSerializer, RestingMetaRateSerializer, PieChartSerializer
 from .models import StressData, HeartRateData, RestingMetRateData
 from localfitserver import settings
 
@@ -55,6 +55,30 @@ class HeartRateList(viewsets.GenericViewSet, mixins.ListModelMixin):
         if end_date_str:
             end_date_dt = timezone.make_aware(datetime.strptime(end_date_str, "%Y-%m-%d %H:%M:%S"), timezone=pytz.timezone(settings.TIME_ZONE))
             queryset = queryset.filter(timestamp_utc__lt=end_date_dt.date())
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(serializer.data)
+
+
+class StressRange(viewsets.GenericViewSet, mixins.ListModelMixin):
+    queryset = StressData.objects.all()
+    serializer_class = PieChartSerializer
+
+    def get_queryset(self):
+        queryset = StressData.objects.filter(
+            stress_level_time_utc__gte="2020-01-01 00:00:00",
+            stress_level_time_utc__lt="2020-01-06 00:00:00"
+        )
+        # start_date_str = self.request.query_params.get('start_date')
+        # end_date_str = self.request.query_params.get('end_date')
+        # if start_date_str:
+        #     start_date_dt = datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S")
+        #     queryset = queryset.filter(stress_level_time_utc__gte=start_date_dt.date())
+        # if end_date_str:
+        #     end_date_dt = datetime.strptime(end_date_str, "%Y-%m-%d %H:%M:%S")
+        #     queryset = queryset.filter(stress_level_time_utc__lt=end_date_dt.date())
         return queryset
 
     def list(self, request, *args, **kwargs):
