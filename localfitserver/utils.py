@@ -179,18 +179,18 @@ def get_vo2_max_range(vo2_max):
 
     if vo2_max < 34.4:
         range = "Poor"
-        percent = "0.15"
+        percent = 0.15
     elif 34.4 <= vo2_max < 37.8:
         range = "Fair"
-        percent = "0.3"
+        percent = 0.3
     elif 37.8 <= vo2_max < 42.4:
         range = "Good"
-        percent = "0.5"
+        percent = 0.5
     elif 42.4 <= vo2_max < 47.4:
         range = "Excellent"
-        percent = "0.75"
+        percent = 0.75
     elif 47.4 <= vo2_max:
         range = "Superior"
-        percent = "1.0"
+        percent = 1.0
 
     return range, percent
