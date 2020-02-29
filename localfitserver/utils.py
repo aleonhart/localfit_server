@@ -4,6 +4,7 @@ from django.utils.timezone import make_aware
 from decimal import Decimal
 from geopy.geocoders import Nominatim
 import pytz
+from localfitserver import settings
 
 
 def bitswap_ant_timestamp_to_unix_timestamp(timestamp_32, timestamp_16):
@@ -128,7 +129,7 @@ def format_date_for_calendar_heat_map(datetime_obj):
     Format: YYYY-MM-DD
     This is the format expected by https://github.com/kevinsqi/react-calendar-heatmap
     """
-    return datetime_obj.strftime("%Y-%m-%d")
+    return datetime_obj.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d")
 
 
 def format_date_for_display(date):
