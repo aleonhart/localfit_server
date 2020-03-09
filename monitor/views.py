@@ -3,9 +3,11 @@ from datetime import datetime
 
 # 3rd Party
 from django.utils import timezone
+from fitparse import FitFile
 from rest_framework import viewsets, mixins
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_201_CREATED
 import pytz
 
 # Internal
@@ -110,11 +112,17 @@ class MonitorFileUpload(viewsets.ModelViewSet, mixins.CreateModelMixin):
     serializer_class = MonitorFileUploadSerializer
 
     def create(self, request, *args, **kwargs):
+        if not request.FILES.get('file'):
+            raise ValidationError({"file": "Please provide a file"})
+
+        try:
+            fit_file = FitFile(request.FILES['file'])
+        except FileNotFoundError:
+            raise ValidationError({"file": "File does not exist"})
+
+        request.data['fit_file'] = fit_file
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        try:
-            self.perform_create(serializer)
-        except Exception as e:
-            return Response({'error': e.args}, status=HTTP_400_BAD_REQUEST)
+        self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=HTTP_201_CREATED, headers=headers)

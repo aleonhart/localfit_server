@@ -1,18 +1,19 @@
 # stdlib
-from datetime import timedelta
+from datetime import datetime, timezone
 
 # 3rd Party
-from fitparse import FitFile, FitParseError
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.parsers import FileUploadParser
 from rest_framework.exceptions import ValidationError
+from rest_framework.status import HTTP_400_BAD_REQUEST
 import pytz
 
 # Internal
 from .models import MonitorFile, StressData, HeartRateData, RestingMetRateData, StepData
 from localfitserver.utils import bitswap_ant_timestamp_to_unix_timestamp
+from localfitserver import settings
 
 
 class MonitorFileUploadSerializer(serializers.Serializer):
@@ -53,7 +54,6 @@ class MonitorFileUploadSerializer(serializers.Serializer):
         heart_rate_obj = None
         most_recent_timestamp_ant_epoch = None
 
-        # TODO distance (decimal m), steps, active_time (s), active_calories, duration_min, activity_type (int)
         for row in fit_file.get_messages('monitoring'):
             heart_rate_data = {'file': monitor_file}
             for col in row:
@@ -94,7 +94,9 @@ class MonitorFileUploadSerializer(serializers.Serializer):
             for col in row:
                 if col.name in self.time_fields:
                     if not step_data.get('date'):
-                        step_data['date'] = col.value.date()
+                        # normally save dates in DB in UTC
+                        # but since this is just a date value, needs to be local to get the right day
+                        step_data['date'] = timezone.make_aware(col.value, timezone=pytz.timezone(settings.TIME_ZONE)).date()
                 if col.name in ['steps']:
                     step_data[col.name] = col.value
 
@@ -102,17 +104,14 @@ class MonitorFileUploadSerializer(serializers.Serializer):
         step_obj.save()
         return step_obj
 
+    def _validate_filename(self, filename):
+        if MonitorFile.objects.filter(filename=filename).exists():
+            raise ValidationError(detail={"file": "This file has already been uploaded."}, code=HTTP_400_BAD_REQUEST)
+
     def validate(self, attrs):
-        if not self.initial_data.get('file'):
-            raise ValidationError({"file": "File must be provided"})
-
-        try:
-            fit_file = FitFile(self.initial_data['file'])
-        except FileNotFoundError:
-            raise ValidationError({"file": "File does not exist"})
-
-        attrs['file'] = fit_file
-        attrs['filename'] = self.initial_data['file'].split("/")[-1].split(".")[0]
+        attrs['fit_file'] = self.initial_data['fit_file']
+        attrs['filename'] = self.initial_data['file'].name.split(".")[0]
+        self._validate_filename(attrs['filename'])
         return attrs
 
     def create(self, validated_data):
@@ -120,14 +119,11 @@ class MonitorFileUploadSerializer(serializers.Serializer):
             file = MonitorFile(filename=validated_data['filename'])
             file.save()
 
-            step = self._get_step_data(validated_data['file'], file)
-            stress = self._get_stress_data(validated_data['file'], file)
-            heart_rate = self._get_heart_rate_data(validated_data['file'], file)
-            resting_metabolic_rate = self._get_resting_metabolic_rate_data(validated_data['file'], file)
+            step = self._get_step_data(validated_data['fit_file'], file)
+            stress = self._get_stress_data(validated_data['fit_file'], file)
+            heart_rate = self._get_heart_rate_data(validated_data['fit_file'], file)
+            resting_metabolic_rate = self._get_resting_metabolic_rate_data(validated_data['fit_file'], file)
         return resting_metabolic_rate
-
-    def update(self, instance, validated_data):
-        pass
 
     class Meta:
         model = RestingMetRateData
