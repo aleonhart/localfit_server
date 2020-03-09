@@ -94,9 +94,7 @@ class MonitorFileUploadSerializer(serializers.Serializer):
             for col in row:
                 if col.name in self.time_fields:
                     if not step_data.get('date'):
-                        # normally save dates in DB in UTC
-                        # but since this is just a date value, needs to be local to get the right day
-                        step_data['date'] = timezone.make_aware(col.value, timezone=pytz.timezone(settings.TIME_ZONE)).date()
+                        step_data['date'] = timezone.make_aware(col.value, timezone=pytz.UTC)
                 if col.name in ['steps']:
                     step_data[col.name] = col.value
 

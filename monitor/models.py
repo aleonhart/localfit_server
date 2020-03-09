@@ -47,5 +47,5 @@ class StepData(models.Model):
     """
 
     step_data_id = models.AutoField(primary_key=True)
-    date = models.DateField()
+    date = models.DateTimeField()
     steps = models.IntegerField(null=True)

@@ -12,9 +12,32 @@ import pytz
 
 # Internal
 from .upload_serializers import MonitorFileUploadSerializer
-from .serializers import StressDataSerializer, HeartRateDataSerializer, RestingMetaRateSerializer, PieChartSerializer
-from .models import StressData, HeartRateData, RestingMetRateData
+from .serializers import StressDataSerializer, HeartRateDataSerializer, RestingMetaRateSerializer, PieChartSerializer, StepDataSerializer
+from .models import StressData, HeartRateData, RestingMetRateData, StepData
 from localfitserver import settings
+
+
+class StepsList(viewsets.GenericViewSet, mixins.ListModelMixin):
+    queryset = StepData.objects.all()
+    serializer_class = StepDataSerializer
+
+    def get_queryset(self):
+        start_date = self.request.query_params['start_date']
+        start_date_dt = timezone.make_aware(datetime.strptime(start_date, "%Y-%m-%d"), timezone=pytz.timezone(settings.TIME_ZONE))
+        end_date = self.request.query_params['end_date']
+        end_date_dt = timezone.make_aware(datetime.strptime(end_date, "%Y-%m-%d"),
+                                            timezone=pytz.timezone(settings.TIME_ZONE))
+        return StepData.objects.filter(date__gte=start_date_dt, date__lte=end_date_dt)
+
+    def list(self, request, *args, **kwargs):
+        if not request.query_params.get('start_date'):
+            raise ValidationError({'error': 'Please provide a start_date'})
+
+        if not request.query_params.get('end_date'):
+            raise ValidationError({'error': 'Please provide an end_date'})
+
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(serializer.data)
 
 
 class RestingMetaList(viewsets.GenericViewSet, mixins.ListModelMixin):

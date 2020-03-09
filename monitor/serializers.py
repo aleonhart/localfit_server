@@ -13,6 +13,19 @@ from .models import HeartRateData, RestingMetRateData
 from localfitserver.base_serializers import BaseChartJSListSerializer
 
 
+class StepDataListSerializer(BaseChartJSListSerializer):
+    chart_field = 'steps'
+    time_field = 'date'
+
+
+class StepDataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RestingMetRateData
+        list_serializer_class = StepDataListSerializer
+        fields = ['date', 'steps']
+
+
 class RestingMetaRateListSerializer(BaseChartJSListSerializer):
     chart_field = 'resting_metabolic_rate'
 
