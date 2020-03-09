@@ -100,9 +100,13 @@ class MonitorFileUploadSerializer(serializers.Serializer):
                 if col.name in ['steps']:
                     step_data[col.name] = col.value
 
-        step_obj = StepData(**step_data)
-        step_obj.save()
-        return step_obj
+        step_data_obj, _ = StepData.objects.get_or_create(
+            date=step_data['date'],
+        )
+
+        step_data_obj.steps = step_data_obj.steps + step_data['steps'] if step_data_obj.steps else step_data['steps']
+        step_data_obj.save()
+        return step_data_obj
 
     def _validate_filename(self, filename):
         if MonitorFile.objects.filter(filename=filename).exists():
