@@ -20,8 +20,8 @@ class BaseChartJSListSerializer(serializers.ListSerializer):
     def data(self):
         data = self._format_for_chart_js(self.instance)
         response = {
-            'start_time': timezone.localtime(data[0]['t']) if data else [],
-            'end_time': timezone.localtime(data[-1]['t']) if data else [],
+            'start_time': data[0]['t'] if data else "",
+            'end_time': data[-1]['t'] if data else "",
             self.chart_field: data
         }
         return ReturnDict(response, serializer=self)

@@ -17,6 +17,14 @@ class StepDataListSerializer(BaseChartJSListSerializer):
     chart_field = 'steps'
     time_field = 'date'
 
+    def _format_for_chart_js(self, data):
+        return [
+            {
+                "t": timezone.localtime(getattr(value, self.time_field)).strftime("%Y-%m-%d"),
+                "y": getattr(value, self.chart_field) if getattr(value, self.chart_field) != -1 else 0
+            } for value in data
+        ]
+
 
 class StepDataSerializer(serializers.ModelSerializer):
 
