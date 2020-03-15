@@ -9,7 +9,7 @@ from rest_framework import serializers
 from rest_framework.utils.serializer_helpers import ReturnDict
 
 # Internal
-from .models import HeartRateData, RestingMetRateData
+from .models import HeartRateData, RestingMetRateData, StepData
 from localfitserver.base_serializers import BaseChartJSListSerializer
 
 
@@ -20,17 +20,37 @@ class StepDataListSerializer(BaseChartJSListSerializer):
     def _format_for_chart_js(self, data):
         return [
             {
-                "t": timezone.localtime(getattr(value, self.time_field)).strftime("%Y-%m-%d"),
+                "t": getattr(value, self.time_field).strftime("%Y-%m-%d"),
                 "y": getattr(value, self.chart_field) if getattr(value, self.chart_field) != -1 else 0
-            } for value in data
+            } for value in data.order_by('date')
         ]
 
 
 class StepDataSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = RestingMetRateData
+        model = StepData
         list_serializer_class = StepDataListSerializer
+        fields = ['date', 'steps']
+
+
+class StepGoalListSerializer(serializers.ListSerializer):
+
+    @property
+    def data(self):
+        actual_total_steps = sum(self.instance.values_list('steps', flat=True))
+        goal_total_steps = 5000 * self.context["days_in_month"]
+        response = {
+            'monthly_step_goal_percent_completed': round((actual_total_steps / goal_total_steps) * 100)
+        }
+        return ReturnDict(response, serializer=self)
+
+
+class StepGoalSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = StepData
+        list_serializer_class = StepGoalListSerializer
         fields = ['date', 'steps']
 
 

@@ -3,7 +3,7 @@ from django.urls import include, path
 from rest_framework import routers
 
 # Internal
-from .views import MonitorFileUpload, StressList, HeartRateList, RestingMetaList, StressRange, StepsList
+from .views import MonitorFileUpload, StressList, HeartRateList, RestingMetaList, StressRange, StepsList, stepgoal
 
 
 router = routers.DefaultRouter()
@@ -17,4 +17,5 @@ router.register(r'resting_meta', RestingMetaList)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('step_goal/', stepgoal),
 ]

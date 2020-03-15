@@ -47,5 +47,6 @@ class StepData(models.Model):
     """
 
     step_data_id = models.AutoField(primary_key=True)
-    date = models.DateTimeField()
+    file = models.ForeignKey(MonitorFile, on_delete=models.CASCADE, null=True)
+    date = models.DateField()
     steps = models.IntegerField(null=True)

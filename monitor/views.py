@@ -1,10 +1,12 @@
 # stdlib
-from datetime import datetime
+from datetime import datetime, timezone
+from calendar import monthrange
 
 # 3rd Party
 from django.utils import timezone
 from fitparse import FitFile
 from rest_framework import viewsets, mixins
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED
@@ -12,7 +14,8 @@ import pytz
 
 # Internal
 from .upload_serializers import MonitorFileUploadSerializer
-from .serializers import StressDataSerializer, HeartRateDataSerializer, RestingMetaRateSerializer, PieChartSerializer, StepDataSerializer
+from .serializers import (StressDataSerializer, HeartRateDataSerializer, RestingMetaRateSerializer, PieChartSerializer,
+                          StepDataSerializer, StepGoalSerializer)
 from .models import StressData, HeartRateData, RestingMetRateData, StepData
 from localfitserver import settings
 
@@ -38,6 +41,24 @@ class StepsList(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response(serializer.data)
+
+
+@api_view(['GET'])
+def stepgoal(request):
+    if not request.query_params.get('year'):
+        raise ValidationError({'error': 'Please provide a year'})
+
+    if not request.query_params.get('month'):
+        raise ValidationError({'error': 'Please provide a month'})
+
+    year = request.query_params['year']
+    month = request.query_params['month']
+
+    _, days_in_month = monthrange(int(year), int(month))
+
+    data = StepData.objects.filter(date__gte=f"{year}-{month}-01", date__lte=f"{year}-{month}-{days_in_month}")
+    serializer = StepGoalSerializer(data, context={'days_in_month': days_in_month}, many=True)
+    return Response(serializer.data)
 
 
 class RestingMetaList(viewsets.GenericViewSet, mixins.ListModelMixin):
