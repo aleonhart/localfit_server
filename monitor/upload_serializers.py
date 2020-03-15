@@ -96,13 +96,15 @@ class MonitorFileUploadSerializer(serializers.Serializer):
                     if not step_data.get('date'):
                         step_data['date'] = timezone.make_aware(col.value, timezone=pytz.UTC)
                 if col.name in ['steps']:
-                    step_data[col.name] = col.value
+                    # step data is a mess to parse. the largest value is the final value.
+                    if col.value > step_data.get(col.name, 0):
+                        step_data[col.name] = col.value
 
-        step_data_obj, _ = StepData.objects.get_or_create(
-            date=step_data['date'],
-        )
+        local_date = step_data['date'].astimezone(pytz.timezone(settings.TIME_ZONE)).date()
+        step_data_obj, _ = StepData.objects.get_or_create(date=local_date)
 
-        step_data_obj.steps = step_data_obj.steps + step_data['steps'] if step_data_obj.steps else step_data['steps']
+        step_data_obj.steps = step_data_obj.steps \
+            if step_data_obj.steps and (step_data_obj.steps > step_data['steps']) else step_data['steps']
         step_data_obj.save()
         return step_data_obj
 
