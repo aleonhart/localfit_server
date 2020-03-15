@@ -41,7 +41,7 @@ class StepGoalListSerializer(serializers.ListSerializer):
         actual_total_steps = sum(self.instance.values_list('steps', flat=True))
         goal_total_steps = 5000 * self.context["days_in_month"]
         response = {
-            'monthly_step_goal_percent_completed': round((actual_total_steps / goal_total_steps) * 100)
+            'monthly_step_goal_percent_completed': round((actual_total_steps / goal_total_steps), 2)
         }
         return ReturnDict(response, serializer=self)
 
