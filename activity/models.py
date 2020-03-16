@@ -6,6 +6,8 @@ class ActivityFile(models.Model):
     activity_type = models.CharField(max_length=20)
     activity_category = models.CharField(max_length=20)
     start_time_utc = models.DateTimeField()
+    primary_file = models.BooleanField(default=True)
+    secondary_activity = models.ForeignKey('self', null=True, on_delete=models.CASCADE)
 
 
 class Session(models.Model):
