@@ -95,7 +95,7 @@ class ActivitiesCalendarList(viewsets.GenericViewSet, mixins.ListModelMixin):
         start_date_dt = timezone.make_aware(datetime.strptime(f'{year_str}-01-01', "%Y-%m-%d"),
                                          timezone=pytz.timezone(settings.TIME_ZONE))
         end_date_dt = start_date_dt + timedelta(days=365)
-        return ActivityFile.objects.filter(start_time_utc__gte=start_date_dt, start_time_utc__lt=end_date_dt)
+        return ActivityFile.objects.filter(start_time_utc__gte=start_date_dt, start_time_utc__lt=end_date_dt, primary_file=True)
 
     def list(self, request, *args, **kwargs):
         if not request.query_params.get('year'):

@@ -115,12 +115,28 @@ class ActivityMapDataSerializer(serializers.ModelSerializer):
 
 
 class ActivityMetaDataSerializer(serializers.ModelSerializer):
-    session = ActivityWalkSessionSerializer(many=True, read_only=True)
+
+    def format_session_data(self, activity, secondary_activity):
+        data = {}
+        session = Session.objects.get(file=activity)
+        data['start_time_utc_dt'] = session.start_time_utc
+        data['start_time_utc'] = session.start_time_utc.strftime("%I:%M%p, %A, %B %d, %Y")
+        data['total_elapsed_time'] = format_timespan_for_display(session.total_elapsed_time)
+        data['total_distance'] = format_distance_for_display(session.total_distance)
+        data['total_calories'] = session.total_calories
+
+        if secondary_activity:
+            secondary_session = Session.objects.get(file=secondary_activity)
+            data['total_elapsed_time'] = format_timespan_for_display(session.total_elapsed_time + secondary_session.total_elapsed_time)
+            data['total_distance'] = format_distance_for_display(session.total_distance + secondary_session.total_distance)
+            data['total_calories'] = session.total_calories + secondary_session.total_calories
+
+        return data
 
     @property
     def data(self):
+        session_data = self.format_session_data(self.instance, self.instance.secondary_activity)
         ret = super().data
-        session_data = ret.pop('session')[0]
         ret.update(**session_data)
         return ReturnDict(ret, serializer=self)
 
