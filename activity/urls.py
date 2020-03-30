@@ -17,4 +17,6 @@ urlpatterns = [
     path('map/<filename>/', views.activity_map),
     path('altitude/<filename>/', views.activity_altitude),
     path('heart_rate/<filename>/', views.activity_heart_rate),
+    path('top/', views.top_activities),
+
 ]

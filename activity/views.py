@@ -2,25 +2,27 @@
 from datetime import datetime, timedelta
 
 # 3rd Party
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from fitparse import FitFile
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 import pytz
 
 # Internal
 from .serializers import (ActivityMapDataSerializer, ActivityMetaDataSerializer, ActivityAltitudeSerializer,
-                          ActivityHeartRateSerializer, ActivitiesSerializer, ActivitiesCalendarSerializer)
+                          ActivityHeartRateSerializer, ActivitiesSerializer, ActivitiesCalendarSerializer,
+                          TopActivitiesSerializer)
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer, ActivityTreadmillFileUploadSerializer,
                                  ActivityEllipticalFileUploadSerializer)
 from .models import ActivityData, ActivityFile
 from localfitserver import settings
+from localfitserver.utils import format_distance_for_display
 
 
 @api_view(['GET'])
@@ -84,6 +86,25 @@ def activities(request):
         return Response(serializer.data)
     except ActivityFile.DoesNotExist:
         return HttpResponse(status=404)
+
+
+@api_view(['GET'])
+def top_activities(request):
+    data = ActivityFile.objects.all().order_by('-session__total_distance'
+                                               ).values('session__total_distance',
+                                                        'activity_type',
+                                                        'session__start_location',
+                                                        'session__start_time_utc')
+
+    activities = [
+        {
+            'distance': format_distance_for_display(activity['session__total_distance']),
+            'start_location': activity['session__start_location'],
+            'start_time_utc': activity['session__start_time_utc'],
+            'activity_type': activity['activity_type']
+        } for activity in data[:10]
+    ]
+    return JsonResponse({"activities": activities})
 
 
 class ActivitiesCalendarList(viewsets.GenericViewSet, mixins.ListModelMixin):
