@@ -40,7 +40,7 @@ class ActivityData(models.Model):
     activity_walk_data_id = models.AutoField(primary_key=True)
     file = models.ForeignKey(ActivityFile, related_name='activitydata', on_delete=models.CASCADE)
     timestamp_utc = models.DateTimeField()                                               # seconds
-    heart_rate = models.IntegerField()                                                   # BPM
+    heart_rate = models.IntegerField(null=True)                                                   # BPM
     position_lat_sem = models.IntegerField(null=True)                                    # semicircles
     position_long_sem = models.IntegerField(null=True)                                   # semicircles
     position_lat_deg = models.DecimalField(null=True, max_digits=8, decimal_places=6)    #      XX.XXXXXX degrees
