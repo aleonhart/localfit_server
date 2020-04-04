@@ -14,15 +14,14 @@ import pytz
 
 # Internal
 from .serializers import (ActivityMapDataSerializer, ActivityMetaDataSerializer, ActivityAltitudeSerializer,
-                          ActivityHeartRateSerializer, ActivitiesSerializer, ActivitiesCalendarSerializer,
-                          TopActivitiesSerializer)
+                          ActivityHeartRateSerializer, ActivitiesSerializer, ActivitiesCalendarSerializer)
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer, ActivityTreadmillFileUploadSerializer,
                                  ActivityEllipticalFileUploadSerializer)
 from .models import ActivityData, ActivityFile
 from localfitserver import settings
-from localfitserver.utils import format_distance_for_display
+from localfitserver.utils import format_distance_for_display, format_timespan_for_display, format_date_for_display
 
 
 @api_view(['GET'])
@@ -94,14 +93,20 @@ def top_activities(request):
                                                ).values('session__total_distance',
                                                         'activity_type',
                                                         'session__start_location',
-                                                        'session__start_time_utc')
+                                                        'session__start_time_utc',
+                                                        'session__total_elapsed_time',
+                                                        'session__total_calories',
+                                                        'filename')
 
     activities = [
         {
-            'distance': format_distance_for_display(activity['session__total_distance']),
+            'total_distance': format_distance_for_display(activity['session__total_distance']),
             'start_location': activity['session__start_location'],
-            'start_time_utc': activity['session__start_time_utc'],
-            'activity_type': activity['activity_type']
+            'start_time_utc': activity['session__start_time_utc'].strftime("%A, %B %d, %Y"),
+            'total_elapsed_time': format_timespan_for_display(activity['session__total_elapsed_time']) if activity['session__total_elapsed_time'] else '--:--:--',
+            'activity_type': activity['activity_type'],
+            'total_calories': activity['session__total_calories'],
+            'filename': activity['filename'],
         } for activity in data[:10]
     ]
     return JsonResponse({"activities": activities})
