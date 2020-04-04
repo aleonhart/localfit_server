@@ -5,6 +5,7 @@ class ActivityFile(models.Model):
     filename = models.CharField(max_length=15, unique=True)
     activity_type = models.CharField(max_length=20)
     activity_category = models.CharField(max_length=20)
+    activity_collection = models.CharField(null=True, max_length=30)
     start_time_utc = models.DateTimeField()
     primary_file = models.BooleanField(default=True)
     secondary_activity = models.ForeignKey('self', null=True, on_delete=models.CASCADE)
