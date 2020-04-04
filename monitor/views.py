@@ -45,18 +45,11 @@ class StepsList(viewsets.GenericViewSet, mixins.ListModelMixin):
 
 @api_view(['GET'])
 def stepgoal(request):
-    if not request.query_params.get('year'):
-        raise ValidationError({'error': 'Please provide a year'})
+    now = datetime.now()
 
-    if not request.query_params.get('month'):
-        raise ValidationError({'error': 'Please provide a month'})
+    _, days_in_month = monthrange(now.year, now.month)
 
-    year = request.query_params['year']
-    month = request.query_params['month']
-
-    _, days_in_month = monthrange(int(year), int(month))
-
-    data = StepData.objects.filter(date__gte=f"{year}-{month}-01", date__lte=f"{year}-{month}-{days_in_month}")
+    data = StepData.objects.filter(date__gte=f"{now.year}-{now.month}-01", date__lte=f"{now.year}-{now.month}-{days_in_month}")
     serializer = StepGoalSerializer(data, context={'days_in_month': days_in_month}, many=True)
     return Response(serializer.data)
 
