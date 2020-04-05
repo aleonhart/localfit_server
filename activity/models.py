@@ -1,6 +1,10 @@
 from django.db import models
 
 
+class ActivityType(models.Model):
+    activity_type = models.CharField(max_length=20)
+
+
 class ActivityFile(models.Model):
     filename = models.CharField(max_length=15, unique=True)
     activity_type = models.CharField(max_length=20)
