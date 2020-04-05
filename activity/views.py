@@ -62,8 +62,8 @@ def activity_map(request, filename):
 @api_view(['GET'])
 def activity(request, filename):
     try:
-        data = ActivityFile.objects.get(filename=filename)
-        serializer = ActivityMetaDataSerializer(data)
+        activity_file = ActivityFile.objects.get(filename=filename)
+        serializer = ActivityMetaDataSerializer(activity_file)
         return Response(serializer.data)
     except ActivityFile.DoesNotExist:
         return HttpResponse(status=404)
@@ -77,12 +77,21 @@ def update_activity(request, filename):
         return HttpResponse(status=404)
 
     # TODO check if activity_type is in an ENUM of accepted types
-    activity_type = request.data.get('activity_type', {}).get('activity_type')
+    activity_type = request.data.get('activity_type')
     if activity_type:
         activity_file.activity_type = activity_type
-        activity_file.save()
 
-    return HttpResponse(status=200)
+    activity_collection = request.data.get('activity_collection')
+    if activity_collection:
+        activity_file.activity_collection = activity_collection
+
+    start_location = request.data.get('start_location')
+    if start_location:
+        activity_file.start_location = start_location
+
+    activity_file.save()
+
+    return JsonResponse({"activity_type": activity_file.activity_type})
 
 
 @api_view(['GET'])

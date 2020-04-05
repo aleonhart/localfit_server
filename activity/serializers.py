@@ -160,7 +160,7 @@ class ActivityMetaDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ActivityFile
-        fields = ['activity_type', 'start_time_utc', 'session']
+        fields = ['activity_type', 'start_time_utc', 'session', 'activity_collection']
 
 
 class ActivitiesListSerializer(serializers.ListSerializer):
