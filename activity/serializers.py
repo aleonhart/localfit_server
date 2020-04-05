@@ -97,13 +97,30 @@ class ActivityMapSessionSerializer(serializers.ModelSerializer):
 
 
 class ActivityMapDataSerializer(serializers.ModelSerializer):
-    session = ActivityMapSessionSerializer(many=True, read_only=True)
+    # session = ActivityMapSessionSerializer(many=True, read_only=True)
     activitydata = ActivityWalkDataSerializer(many=True, read_only=True)
+
+    def format_session_data(self, activity, secondary_activity):
+        data = {}
+        session = Session.objects.get(file=activity)
+        # data['start_time_utc_dt'] = session.start_time_utc
+        # data['start_time_utc'] = session.start_time_utc.strftime("%I:%M%p, %A, %B %d, %Y")
+        # data['total_elapsed_time'] = format_timespan_for_display(session.total_elapsed_time)
+        # data['total_distance'] = format_distance_for_display(session.total_distance)
+        # data['total_calories'] = session.total_calories
+
+        if secondary_activity:
+            secondary_session = Session.objects.get(file=secondary_activity)
+            data['total_elapsed_time'] = format_timespan_for_display(session.total_elapsed_time + secondary_session.total_elapsed_time)
+            data['total_distance'] = format_distance_for_display(session.total_distance + secondary_session.total_distance)
+            data['total_calories'] = session.total_calories + secondary_session.total_calories
+
+        return data
 
     @property
     def data(self):
         ret = super().data
-        session_data = ret.pop('session')[0]
+        session_data = self.format_session_data(self.instance, self.instance.secondary_activity)
         ret.update(**session_data)
         ret['activitydata'] = list(filter((None).__ne__, ret['activitydata']))
         ret['midpoint_lat_deg'], ret['midpoint_long_deg'] = calculate_geographic_midpoint(ret['activitydata'])
@@ -124,6 +141,7 @@ class ActivityMetaDataSerializer(serializers.ModelSerializer):
         data['total_elapsed_time'] = format_timespan_for_display(session.total_elapsed_time)
         data['total_distance'] = format_distance_for_display(session.total_distance)
         data['total_calories'] = session.total_calories
+        data['start_location'] = session.start_location
 
         if secondary_activity:
             secondary_session = Session.objects.get(file=secondary_activity)
@@ -163,6 +181,26 @@ class ActivitiesSerializer(serializers.ModelSerializer):
         model = ActivityFile
         list_serializer_class = ActivitiesListSerializer
         fields = ['filename', 'activity_type', 'activity_category', 'start_time_utc', 'session']
+
+
+class TopActivitiesListSerializer(serializers.ListSerializer):
+
+    @property
+    def data(self):
+        files = super(TopActivitiesListSerializer, self).data
+        files
+        for file in files:
+            session_data = file.pop('session')[0]
+            file.update(**session_data)
+        return ReturnList(files, serializer=self)
+
+
+class TopActivitiesSerializer(serializers.Serializer):
+
+    class Meta:
+        model = ActivityData
+        list_serializer_class = TopActivitiesListSerializer
+        fields = '__all__'
 
 
 class ActivitiesCalendarListSerializer(serializers.ListSerializer):

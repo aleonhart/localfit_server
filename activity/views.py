@@ -9,7 +9,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND
 import pytz
 
 # Internal
@@ -67,6 +67,22 @@ def activity(request, filename):
         return Response(serializer.data)
     except ActivityFile.DoesNotExist:
         return HttpResponse(status=404)
+
+
+@api_view(['PATCH'])
+def update_activity(request, filename):
+    try:
+        activity_file = ActivityFile.objects.get(filename=filename)
+    except ActivityFile.DoesNotExist:
+        return HttpResponse(status=404)
+
+    # TODO check if activity_type is in an ENUM of accepted types
+    activity_type = request.data.get('activity_type', {}).get('activity_type')
+    if activity_type:
+        activity_file.activity_type = activity_type
+        activity_file.save()
+
+    return HttpResponse(status=200)
 
 
 @api_view(['GET'])

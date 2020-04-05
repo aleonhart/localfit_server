@@ -14,6 +14,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path('meta/', views.activities),
     path('meta/<filename>/', views.activity),
+    path('update/<filename>/', views.update_activity),
     path('map/<filename>/', views.activity_map),
     path('altitude/<filename>/', views.activity_altitude),
     path('heart_rate/<filename>/', views.activity_heart_rate),
