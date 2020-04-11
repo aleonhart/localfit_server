@@ -14,7 +14,8 @@ import pytz
 
 # Internal
 from .serializers import (ActivityMapDataSerializer, ActivityMetaDataSerializer, ActivityAltitudeSerializer,
-                          ActivityHeartRateSerializer, ActivitiesSerializer, ActivitiesCalendarSerializer)
+                          ActivityHeartRateSerializer, ActivitiesSerializer, ActivitiesCalendarSerializer,
+                          ActivityMapCollectionSerializer)
 from .upload_serializers import (ActivityWalkFileUploadSerializer, ActivityYogaFileUploadSerializer,
                                  ActivityStairClimbingFileUploadSerializer, ActivityCardioFileUploadSerializer,
                                  ActivityRunFileUploadSerializer, ActivityTreadmillFileUploadSerializer,
@@ -56,6 +57,17 @@ def activity_map(request, filename):
         return HttpResponse(status=HTTP_404_NOT_FOUND)
 
     serializer = ActivityMapDataSerializer(file)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def activity_collection_map(request, collection):
+    try:
+        files = ActivityFile.objects.filter(activity_collection=collection)
+    except ActivityFile.DoesNotExist:
+        return HttpResponse(status=HTTP_404_NOT_FOUND)
+
+    serializer = ActivityMapCollectionSerializer(files, many=True)
     return Response(serializer.data)
 
 
