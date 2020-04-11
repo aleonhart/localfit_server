@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 
 # 3rd Party
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
@@ -137,7 +138,7 @@ class ActivityMetaDataSerializer(serializers.ModelSerializer):
         data = {}
         session = Session.objects.get(file=activity)
         data['start_time_utc_dt'] = session.start_time_utc
-        data['start_time_utc'] = session.start_time_utc.strftime("%I:%M%p, %A, %B %d, %Y")
+        data['start_time_utc'] = timezone.localtime(session.start_time_utc).strftime("%I:%M%p, %A, %B %d, %Y")
         data['total_elapsed_time'] = format_timespan_for_display(session.total_elapsed_time)
         data['total_distance'] = format_distance_for_display(session.total_distance)
         data['total_calories'] = session.total_calories
