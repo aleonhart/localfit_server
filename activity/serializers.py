@@ -141,24 +141,30 @@ class ActivityMapCollectionListSerializer(serializers.ListSerializer):
     @property
     def data(self):
         files = super(ActivityMapCollectionListSerializer, self).data
+        total_coordinates = []
+        activities = []
         for file in files:
-            session_data = file.pop('session')[0]
-            file.update(**session_data)
-            file['activitydata'] = list(filter((None).__ne__, file['activitydata']))
+            activity = list(filter((None).__ne__, file['activitydata']))
+            total_coordinates = total_coordinates + activity
+            activities.append(activity)
 
-        # TODO do this after between all of them
-        ###ret['midpoint_lat_deg'], ret['midpoint_long_deg'] = calculate_geographic_midpoint(ret['activitydata'])
-        return ReturnList(files, serializer=self)
+        # find geographic midpoint across all activities to display
+        midpoint_lat_deg, midpoint_long_deg = calculate_geographic_midpoint(total_coordinates)
+        response = {
+            "midpoint_lat_deg": midpoint_lat_deg,
+            "midpoint_long_deg": midpoint_long_deg,
+            "activities": activities
+        }
+        return ReturnDict(response, serializer=self)
 
 
 class ActivityMapCollectionSerializer(serializers.ModelSerializer):
-    session = ActivityMapSessionSerializer(many=True, read_only=True)
     activitydata = ActivityWalkDataSerializer(many=True, read_only=True)
 
     class Meta:
         model = ActivityFile
         list_serializer_class = ActivityMapCollectionListSerializer
-        fields = ['session', 'activitydata']
+        fields = ['activitydata']
 
 
 class ActivityMetaDataSerializer(serializers.ModelSerializer):
