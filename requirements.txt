@@ -3,3 +3,4 @@ Django==2.2.8
 pytz==2019.2
 djangorestframework==3.10.3
 fitparse==1.1.0
+geopy==1.22.0
